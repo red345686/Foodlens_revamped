@@ -5,7 +5,9 @@ import { createBrowserRouter as Router, RouterProvider } from 'react-router-dom'
 import Products from './Products';
 import Community from './Community';
 import Blogs from './Blogs';
-import Home from './Home';
+import Home from './Home';  
+import Login from './Login';
+import Explore from './Explore';
 function App() {
 
   const router = Router([
@@ -39,6 +41,22 @@ function App() {
         <>
           <NavBar />
           <Blogs />
+        </>
+    },
+    {
+      path: "/explore",
+      element:
+        <>
+          <NavBar />
+          <Explore />
+        </>
+    },
+    {
+      path: "/login",
+      element:
+        <>
+          <NavBar />
+          <Login />
         </>
     },
     {
