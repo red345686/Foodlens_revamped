@@ -1,11 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-function NavBar() {
+function NavBar({ page }) {
   const font = {
     fontFamily: "Zen Kaku Gothic Antique"
   }
   return (
-    <header className="fixed top-0 w-full bg-transparent bg-opacity-0 backdrop-filter backdrop-blur-lgg pt-4 z-50">
+    <header className={`w-full bg-green-900 backdrop-filter`}>
       <nav className="container mx-auto px-6 py-1 flex items-center">
         <Link to='/' className='text-lg font-bold text-white px-12'>
           <div className='flex items-center'>
@@ -13,11 +13,13 @@ function NavBar() {
             <span className='mx-2 text-2xl'>FoodLens</span>
           </div>
         </Link>
-        <div className="space-x-10 text-white font-sans text-lg">
-          <Link to='/products'>Products</Link>
-          <Link to='/blogs'>Blog</Link>
-          <Link to='/community'>Community</Link>
-          <Link to='/about'>About</Link>
+        <div className="space-x-10 font-sans text-lg">
+          <Link className={`${page === 'products' ? 'active text-white' : 'text-gray-400'}`} to='/products'>Products</Link>
+          <Link className={`${page === 'blogs' ? 'active text-white' : 'text-gray-400'}`} to='/blogs'>Blog</Link>
+          <Link className={`${page === 'community' ? 'active text-white' : 'text-gray-400'}`} to='/community'>Community</Link>
+          <Link className={`${page === 'about' ? 'active text-white' : 'text-gray-400'}`} to='/about'>About</Link>
+          <Link className={`${page === 'explore' ? 'active text-white' : 'text-gray-400'}`} to='/report'>Report</Link>
+          <span></span>
         </div>
       </nav>
     </header>

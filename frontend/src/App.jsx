@@ -8,6 +8,7 @@ import Blogs from './Blogs';
 import Home from './Home';  
 import Login from './Login';
 import Explore from './Explore';
+import Report from './components/Report';
 function App() {
 
   const router = Router([
@@ -15,7 +16,7 @@ function App() {
       path: "/",
       element:
         <>
-          <NavBar />
+          {/* <NavBar navColor={'bg-transparent'}/> */}
           <Home />
         </>
     },
@@ -23,7 +24,7 @@ function App() {
       path: "/products",
       element:
         <>
-          <NavBar />
+          <NavBar page='products' />
           <Products />
         </>
     },
@@ -31,7 +32,7 @@ function App() {
       path: "/community",
       element:
         <>
-          <NavBar />
+          <NavBar page='community' />
           <Community />
         </>
     },
@@ -39,7 +40,7 @@ function App() {
       path: "/blogs",
       element:
         <>
-          <NavBar />
+          <NavBar page='blogs'/>
           <Blogs />
         </>
     },
@@ -47,7 +48,7 @@ function App() {
       path: "/explore",
       element:
         <>
-          <NavBar />
+          <NavBar page='explore' />
           <Explore />
         </>
     },
@@ -55,7 +56,6 @@ function App() {
       path: "/login",
       element:
         <>
-          <NavBar />
           <Login />
         </>
     },
@@ -63,10 +63,18 @@ function App() {
       path: "/about",
       element:
         <>
-          <NavBar />
+          <NavBar page='about' />
           <About />
         </>
-    }
+    },
+    {
+      path: "/report",
+      element:
+        <>
+          <NavBar page='report' />
+          <Report />
+        </>
+    },
   ]);
   return (
     <>
