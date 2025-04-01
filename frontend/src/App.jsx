@@ -24,7 +24,7 @@ function App() {
       path: "/products",
       element:
         <>
-          <NavBar page='products' />
+          {/* <NavBar page='products' /> */}
           <Products />
         </>
     },
@@ -32,7 +32,7 @@ function App() {
       path: "/community",
       element:
         <>
-          <NavBar page='community' />
+          {/* <NavBar page='community' /> */}
           <Community />
         </>
     },
@@ -40,7 +40,6 @@ function App() {
       path: "/blogs",
       element:
         <>
-          <NavBar page='blogs'/>
           <Blogs />
         </>
     },
@@ -48,7 +47,7 @@ function App() {
       path: "/explore",
       element:
         <>
-          <NavBar page='explore' />
+          {/* <NavBar page='explore' /> */}
           <Explore />
         </>
     },
@@ -63,7 +62,7 @@ function App() {
       path: "/about",
       element:
         <>
-          <NavBar page='about' />
+          {/* <NavBar page='about' /> */}
           <About />
         </>
     },
@@ -71,7 +70,7 @@ function App() {
       path: "/report",
       element:
         <>
-          <NavBar page='report' />
+          {/* <NavBar page='report' /> */}
           <Report />
         </>
     },

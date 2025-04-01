@@ -5,7 +5,7 @@ function NavBar({ page }) {
     fontFamily: "Zen Kaku Gothic Antique"
   }
   return (
-    <header className="w-full bg-[#294c25] backdrop-filter fixed">
+    <header className="w-full bg-[#294c25] backdrop-filter fixedd">
       <nav className="container mx-auto px-6 py-1 flex items-center">
         <Link to='/' className='text-lg font-bold text-white px-12'>
           <div className='flex items-center'>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import Footer from './Footer'
+import NavBar from './components/NavBar';
 
 const Products = () => {
   const [allProducts, setAllProducts] = useState([
@@ -74,10 +75,13 @@ const Products = () => {
   }
 
   return (
+    <>
+    <NavBar page='products' />
     <div style={{ backgroundColor: '#d9f8da', zIndex: '-100', width: '99vw', position: 'absolute', overflowX: 'hidden' }} className='mt-12'>
       {/*Put main body here */}
       <Footer />
     </div>
+    </>
   )
 }
 

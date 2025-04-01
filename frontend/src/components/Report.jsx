@@ -1,10 +1,14 @@
 import React from 'react'
+import NavBar from './NavBar'
 
 const Report = () => {
   return (
-    <div>
-      This is report page.
-    </div>
+    <>
+      <NavBar page='report' />
+      <div>
+        This is report page.
+      </div>
+    </>
   )
 }
 

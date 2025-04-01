@@ -29,7 +29,7 @@ const Footer = () => {
               <p>Know your Food</p>
               <p>Community Forum</p>
               <p>Blogs</p>
-              <p>Contribute</p>
+              {/* <p>Contribute</p> */}
               <p>Report</p>
             </div>
           </div>
@@ -37,7 +37,7 @@ const Footer = () => {
             <h1 className='text-white text-3xl my-2'>Company</h1>
             <div className='text-white text-md'>
               <p>About Us</p>
-              <p>Careers</p>
+              {/* <p>Careers</p> */}
               <p>FAQs</p>
               <p>Teams</p>
               <p>Contact Us</p>
