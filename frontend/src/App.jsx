@@ -9,6 +9,7 @@ import Home from './Home';
 import Login from './Login';
 import Explore from './Explore';
 import Report from './components/Report';
+import FAQs from './FAQs';
 import { auth } from './firebase';
 
 function App() {
@@ -16,11 +17,7 @@ function App() {
   const router = Router([
     {
       path: "/",
-      element:
-        <>
-          {/* <NavBar navColor={'bg-transparent'}/> */}
-          <Home />
-        </>
+      element: <Home />
     },
     {
       path: "/products",
@@ -74,6 +71,14 @@ function App() {
         <>
           {/* <NavBar page='report' /> */}
           <Report />
+        </>
+    },
+    {
+      path: "/faqs",
+      element:
+        <>
+          <NavBar page='faqs' />
+          <FAQs />
         </>
     },
   ]);

@@ -6,7 +6,7 @@ const Community = () => {
   return (
     <>
       <NavBar page='community' />
-      <div style={{ backgroundColor: '#d9f8da', zIndex: '-100', width: '99vw', position: 'absolute', overflowX: 'hidden' }} className='mt-12'>
+      <div style={{ backgroundColor: '#d9f8da', zIndex: '-100', width: '99vw', position: 'absolute', overflowX: 'hidden' }} className='pt-20'>
         This is community page.
         <Footer />
       </div>
