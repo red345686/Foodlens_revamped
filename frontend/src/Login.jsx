@@ -1,7 +1,18 @@
-import React from 'react'
+import { useState, useEffect } from "react";
+import { auth } from "./firebase";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Link } from 'react-router-dom'
 
 const Login = () => {
+  const handleGoogleSignIn = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+    }
+  };
+
   return (
     <div className='xl:flex justify-between'>
       <div className='p-6 sm:px-12 xl:mx-auto backdrop-blur-xl h-screen sm:pt-[5vh] lg:pt-[8vh]'>
@@ -31,7 +42,7 @@ const Login = () => {
           <div className='w-full' style={{ height: '0.1rem', marginTop: '0.7rem', backgroundColor: 'black' }}></div>
         </div>
         {/* Google Login below */}
-        <button className='flex justify-around border rounded-2xl text w-full' style={{ backgroundColor: '#f2f2f2' }}><img src='google.svg'></img></button> 
+        <button onClick={handleGoogleSignIn} className='flex justify-around border rounded-2xl text w-full' style={{ backgroundColor: '#f2f2f2' }}><img src='google.svg'></img></button>
         <p className='text-sm lg:text-base mt-6 mx-6 text-center'>Don't have an account? <Link className='text-purple-600 underline font-semibold'>Register here</Link></p>
       </div>
       <img className='fixed xl:relative h-[100vh] sm:h-[100vh] sm:w-auto' src="LoginBack.jpg" alt="" style={{ top: '0', zIndex: '-1' }} />
