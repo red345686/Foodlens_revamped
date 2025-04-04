@@ -11,6 +11,7 @@ import Explore from './Explore';
 import Report from './components/Report';
 import FAQs from './FAQs';
 import { auth } from './firebase';
+import Contribute from './Contribute';
 
 function App() {
 
@@ -77,10 +78,18 @@ function App() {
       path: "/faqs",
       element:
         <>
-          <NavBar page='faqs' />
+          {/* <NavBar page='faqs' /> */}
           <FAQs />
         </>
     },
+    {
+      path: "/contribute",
+      element:
+        <>
+          {/* <NavBar page='contribute' /> */}
+          <Contribute />
+        </>
+    }
   ]);
   return (
     <>
