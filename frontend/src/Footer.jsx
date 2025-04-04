@@ -14,10 +14,10 @@ const Footer = () => {
   return (
     <div className="relative">
       {/* Slanted background */}
-      <div className="absolute w-full h-16 bg-[#294c25] transform rotate-3 translate-y-6 -z-10"></div>
-
       {/* Main footer */}
-      <footer className="bg-[#294c25] pt-16 pb-6">
+      <footer className="bg-[#294c25] pt-16 pb-6" style={{
+        clipPath: "polygon(0 0, 0 100%, 100% 100%, 100% 10vh)",
+      }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Main footer content */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -61,7 +61,7 @@ const Footer = () => {
             </div>
 
             {/* Product links */}
-            <div className="text-center md:text-left">
+            <div className="text-center md:text-left md:mt-10 lg:mt-6">
               <h2 className="text-white text-xl font-medium mb-4">Product</h2>
               <ul className="space-y-2">
                 <li>
@@ -100,7 +100,7 @@ const Footer = () => {
             </div>
 
             {/* Company links */}
-            <div className="text-center md:text-left">
+            <div className="text-center md:text-left lg:mt-10">
               <h2 className="text-white text-xl font-medium mb-4">Company</h2>
               <ul className="space-y-2">
                 <li>
@@ -139,7 +139,7 @@ const Footer = () => {
             </div>
 
             {/* Subscribe section */}
-            <div className="text-center md:text-left">
+            <div className="text-center md:text-left lg:mt-16 ">
               <h2 className="text-white text-xl font-medium mb-4">Subscribe</h2>
               <p className="text-gray-300 text-sm mb-4">
                 Subscribe to stay tuned for latest food updates.

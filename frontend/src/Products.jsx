@@ -77,7 +77,7 @@ const Products = () => {
   return (
     <>
       <NavBar page='products' />
-      <div style={{ backgroundColor: '#d9f8da', zIndex: '-100', width: '99vw', position: 'absolute', overflowX: 'hidden' }} className='pt-20'>
+      <div style={{ backgroundColor: '#d9f8da', zIndex: '-100', width: '100vw', position: 'absolute', overflowX: 'hidden' }} className='pt-20'>
         {/*Put main body here */}
         <Footer />
       </div>

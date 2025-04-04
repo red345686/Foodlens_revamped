@@ -1,32 +1,18 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import NavBar from './components/NavBar'
 const Home = () => {
   return (
     <>
-      <header className={`sticky w-full bg-transparent backdrop-filter`}>
-        <nav className="container mx-auto px-6 py-1 flex items-center">
-          <Link to='/' className='text-lg font-bold text-white px-12'>
-            <div className='flex items-center'>
-              <img className="w-10 rounded-lg" src="logo.png" alt="" />
-              <span className='mx-2 text-2xl'>FoodLens</span>
-            </div>
-          </Link>
-          <div className="space-x-10 text-white font-sans text-lg">
-            <Link to='/products'>Products</Link>
-            <Link to='/blogs'>Blog</Link>
-            <Link to='/community'>Community</Link>
-            <Link to='/about'>About</Link>
-          </div>
-        </nav>
-      </header>
-      <div className="bg-[url('HomeBackground.png')] bg-cover bg-center fixed h-screen w-full -mt-12 -z-10">
+      <NavBar page='home' />
+      <div className="bg-[url('HomeBackground.png')] bg-cover bg-center fixed h-screen w-[100vw]">
       </div>
-      <div className='fixed bg-transparent lg:`p-10 rounded-lg' style={{ marginLeft: '10vw', marginRight: '50vw', marginTop: '20vh' }}>
-        <h1 className='flex text-8xl justify-center mb-10 text-white font-bold w-auto'>FoodLens</h1>
-        <span className='text-3xl text-white font-thin font-'>FoodLens is your go-to platform for understanding the ingredients in your food. Empower yourself to eat smarter with FoodLens!</span>
-        <div className='flex justify-center space-x-20 mt-10'>
-          <Link to='/explore' className='text-3xl text-white px-8 py-4 bg-red-600 rounded-3xl'>EXPLORE</Link>
-          <Link to='/login' className='text-3xl text-white px-8 py-4 bg-red-600 rounded-3xl'>LOGIN</Link>
+      <div className='fixed w-auto bg-transparent lg:p-10 ml-[10vw] mr-[10vw] sm:mr-[30vw] md:mr-[50vw] mt-[10vh] lg:mt-[20vh]'>
+        <div className='sm:w-auto text-center mt-[10vh] text-4xl sm:text-5xl md:text-6xl lg:text-8xl mb-10 text-white font-bold'>FoodLens</div>
+        <div className='sm:w-auto pr-[10vw] sm:pr-0 text-xl md:text-2xl lg:text-3xl text-white font-normal font-sans'>FoodLens is your go-to platform for understanding the ingredients in your food. Empower yourself to eat smarter with FoodLens!</div>
+        <div className='flex flex-col sm:flex-row sm:justify-evenly mt-10'>
+          <div className='sm:w-auto text-center text-lg sm:text-xl md:text-2xl my-2 lg:text-3xl text-white px-3 md:px-5 lg:px-8 py-2 md:py-3 lg:py-4 bg-red-600 rounded-2xl lg:rounded-3xl'><Link to='/login'>LOGIN</Link></div>
+          <div className='sm:w-auto text-center text-lg sm:text-xl md:text-2xl my-2 lg:text-3xl text-white px-3 md:px-5 lg:px-8 py-2 md:py-3 lg:py-4 bg-red-600 rounded-2xl lg:rounded-3xl'><Link to='/explore'>EXPLORE</Link></div>
         </div>
       </div>
     </>

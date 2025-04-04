@@ -49,7 +49,7 @@ const Blogs = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden">
+    <div className="min-h-screen flex flex-col overflow-x-hidden bg-[#d9f8da]">
       <NavBar page='blogs' />
       <div className="bg-[#b7f7b0]" style={{ marginTop: '56px' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -57,8 +57,13 @@ const Blogs = () => {
           <p className="text-base md:text-lg text-[#11500c]">Stay up to date with latest food news and facts</p>
         </div>
       </div>
+      {/* Triangle aa gya wapas */}
+      <div className='w-full h-6 md:h-12 -mt-[1px]' style={{
+        clipPath: 'polygon(0 0, 100% 0, 100% 100%)',
+        backgroundColor: '#b7f7b0',
+      }}></div>
 
-      <div className="flex-grow bg-[#d9f8da]">
+      <div className="flex-grow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Featured Articles */}
           <div className="space-y-4 mb-12">

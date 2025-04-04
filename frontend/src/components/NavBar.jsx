@@ -20,9 +20,9 @@ function NavBar({ page }) {
   ];
 
   return (
-    <header className="w-full bg-[#294c25] backdrop-filter fixed top-0 z-50">
+    <header className={`w-full ${ page === 'home' ? 'bg-transparent' : 'bg-[#294c25]'} backdrop-filter fixed top-0 z-50 ${page === 'home' ? 'backdrop-blur' : ''}`}>
       <nav className="container mx-auto px-4 sm:px-6 py-2">
-        <div className="flex items-center justify-between">
+        <div className={`flex items-center justify-between ${ page === 'home' ? 'xl:mr-80' : ''}`}>
           <Link to='/' className='flex items-center'>
             <img className="w-8 sm:w-10 rounded-lg" src="logo.png" alt="FoodLens Logo" />
             <span className='mx-2 text-xl sm:text-2xl text-white'>FoodLens</span>
@@ -34,7 +34,7 @@ function NavBar({ page }) {
               <Link
                 key={link.path}
                 className={`${
-                  page === link.page ? 'text-white' : 'text-gray-400 hover:text-white transition-colors'
+                  (page === link.page || page === 'home')? 'text-white' : 'text-gray-400 hover:text-white transition-colors'
                 }`}
                 to={link.path}
               >
@@ -78,7 +78,7 @@ function NavBar({ page }) {
               <Link
                 key={link.path}
                 className={`block px-4 py-2 rounded-lg ${
-                  page === link.page
+                  (page === link.page)
                     ? 'text-white bg-[#1a3317]'
                     : 'text-gray-400 hover:text-white hover:bg-[#1a3317] transition-colors'
                 }`}
