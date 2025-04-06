@@ -13,6 +13,7 @@ import FAQs from './FAQs';
 import { auth } from './firebase';
 import Contribute from './Contribute';
 import Teams from './Teams';
+import { AuthProvider } from './AuthContext';
 
 function App() {
 
@@ -101,9 +102,9 @@ function App() {
     }
   ]);
   return (
-    <>
+    <AuthProvider>
       <RouterProvider router={router} />
-    </>
+    </AuthProvider>
   );
 }
 
