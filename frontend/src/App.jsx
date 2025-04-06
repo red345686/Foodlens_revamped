@@ -12,6 +12,7 @@ import Report from './components/Report';
 import FAQs from './FAQs';
 import { auth } from './firebase';
 import Contribute from './Contribute';
+import Teams from './Teams';
 
 function App() {
 
@@ -88,6 +89,14 @@ function App() {
         <>
           {/* <NavBar page='contribute' /> */}
           <Contribute />
+        </>
+    },
+    {
+      path: "/teams",
+      element:
+        <>
+          {/* <NavBar page='teams' /> */}
+          <Teams />
         </>
     }
   ]);
