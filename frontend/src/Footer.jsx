@@ -56,7 +56,7 @@ const Footer = () => {
                 </a>
               </div>
               <button className="bg-white text-[#294c25] py-2 px-8 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors">
-                Contact Us
+                <Link to="/contact">Contact Us</Link>
               </button>
             </div>
 
