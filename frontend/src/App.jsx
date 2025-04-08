@@ -14,6 +14,7 @@ import { auth } from './firebase';
 import Contribute from './Contribute';
 import Teams from './Teams';
 import { AuthProvider } from './AuthContext';
+import Contact from './Contact';
 
 function App() {
 
@@ -98,6 +99,14 @@ function App() {
         <>
           {/* <NavBar page='teams' /> */}
           <Teams />
+        </>
+    },
+    {
+      path: "/contact",
+      element:
+        <>
+          {/* <NavBar page='contact' /> */}
+          <Contact />
         </>
     }
   ]);
