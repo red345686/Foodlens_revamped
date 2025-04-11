@@ -124,6 +124,16 @@ const Profile = () => {
         }));
     };
 
+    const handlePrimaryGoalSelect = (goal) => {
+        setProfileData(prev => ({
+            ...prev,
+            goals: {
+                ...prev.goals,
+                primaryGoal: goal
+            }
+        }));
+    };
+
     const handleSave = async () => {
         if (!user) return;
 
@@ -308,17 +318,19 @@ const Profile = () => {
                     </div>
                     <div className="space-y-6">
                         <div>
-                            <label className="block text-gray-700 mb-2">Primary Goal</label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <h3 className="text-lg font-medium text-gray-900">Primary Goal</h3>
+                            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 {['Weight Loss', 'Muscle Gain', 'Maintenance', 'Better Health', 'Specific Diet'].map((goal) => (
                                     <button
                                         key={goal}
-                                        onClick={() => isEditing && handleMultiSelect('goals', 'primaryGoal', goal)}
+                                        type="button"
+                                        onClick={() => isEditing && handlePrimaryGoalSelect(goal)}
                                         disabled={!isEditing}
-                                        className={`p-4 border rounded-lg text-center ${profileData.goals.primaryGoal === goal
-                                            ? 'border-[#294c25] bg-[#294c25] text-white'
-                                            : 'border-gray-300'
-                                            } ${!isEditing && 'opacity-75 cursor-not-allowed'}`}
+                                        className={`relative w-full rounded-lg border p-4 text-center text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 
+                                            ${profileData.goals.primaryGoal === goal
+                                                ? 'border-green-600 bg-green-50 text-green-800'
+                                                : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'} 
+                                            ${!isEditing && 'opacity-75 cursor-not-allowed'}`}
                                     >
                                         {goal}
                                     </button>
@@ -326,17 +338,19 @@ const Profile = () => {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-gray-700 mb-2">Diet Preferences</label>
-                            <div className="flex flex-wrap gap-2">
+                            <h3 className="text-lg font-medium text-gray-900">Diet Preferences</h3>
+                            <div className="mt-4 flex flex-wrap gap-2">
                                 {['Vegetarian', 'Vegan', 'Keto', 'Paleo', 'Gluten-Free'].map((pref) => (
                                     <button
                                         key={pref}
+                                        type="button"
                                         onClick={() => isEditing && handleMultiSelect('goals', 'dietPreferences', pref)}
                                         disabled={!isEditing}
-                                        className={`px-4 py-2 rounded-full ${profileData.goals.dietPreferences.includes(pref)
-                                            ? 'bg-[#294c25] text-white'
-                                            : 'bg-gray-200 text-gray-700'
-                                            } ${!isEditing && 'opacity-75 cursor-not-allowed'}`}
+                                        className={`rounded-full px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 
+                                            ${profileData.goals.dietPreferences.includes(pref)
+                                                ? 'bg-green-800 text-white'
+                                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}
+                                            ${!isEditing && 'opacity-75 cursor-not-allowed'}`}
                                     >
                                         {pref}
                                     </button>
@@ -344,15 +358,25 @@ const Profile = () => {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-gray-700 mb-2">Allergies</label>
+                            <h3 className="text-lg font-medium text-gray-900">Allergies</h3>
                             <input
                                 type="text"
                                 name="allergies"
-                                value={profileData.goals.allergies}
-                                onChange={(e) => handleInputChange(e, 'goals')}
-                                disabled={!isEditing}
                                 placeholder="Add allergies (comma separated)"
-                                className="w-full p-2 border rounded-lg disabled:bg-gray-100"
+                                value={profileData.goals.allergies.join(', ')}
+                                onChange={(e) => {
+                                    if (!isEditing) return;
+                                    const allergiesArray = e.target.value.split(',').map(item => item.trim()).filter(Boolean);
+                                    setProfileData(prev => ({
+                                        ...prev,
+                                        goals: {
+                                            ...prev.goals,
+                                            allergies: allergiesArray
+                                        }
+                                    }));
+                                }}
+                                disabled={!isEditing}
+                                className={`mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm ${!isEditing && 'bg-gray-50 cursor-not-allowed'}`}
                             />
                         </div>
                     </div>
