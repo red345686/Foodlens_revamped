@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Footer from './Footer'
 import NavBar from './components/NavBar';
+import GetInfoWithBarcode from './GetInfoWithBarcode';
 
 const Products = () => {
   const [allProducts, setAllProducts] = useState([
@@ -77,8 +78,13 @@ const Products = () => {
   return (
     <>
       <NavBar page='products' />
-      <div style={{ backgroundColor: '#d9f8da', zIndex: '-100', width: '100vw', position: 'absolute', overflowX: 'hidden' }} className='pt-20'>
+      {/* <div className="min-h-screen flex flex-col"> */}
+      <div style={{ backgroundColor: '#d9f8da', zIndex: '-100', width: '100%', position: 'absolute', overflowX: 'hidden' }} className='pt-20'>
+        <h1>Remove this when developing the product page</h1>
         {/*Put main body here */}
+
+        {/* Activate this when someone wants to search product with barcode     */}
+        <GetInfoWithBarcode />
         <Footer />
       </div>
     </>
