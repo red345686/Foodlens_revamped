@@ -29,6 +29,7 @@ function NavBar({ page }) {
     { path: '/community', label: 'Community', page: 'community' },
     { path: '/about', label: 'About', page: 'about' },
     { path: '/report', label: 'Report', page: 'report' },
+    { path: '/contact', label: 'Contact', page: 'contact' },
   ];
 
   return (

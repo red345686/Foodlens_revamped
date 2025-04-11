@@ -15,6 +15,7 @@ import Contribute from './Contribute';
 import Teams from './Teams';
 import { AuthProvider } from './AuthContext';
 import Profile from './Profile';
+import Contact from './Contact';
 
 function App() {
 
@@ -102,11 +103,20 @@ function App() {
         </>
     },
     {
+
       path: "/profile",
       element:
         <>
           {/* <NavBar page='profile' /> */}
           <Profile />
+    },
+
+  {
+      path: "/contact",
+      element:
+        <>
+          {/* <NavBar page='contact' /> */}
+          <Contact />
         </>
     }
   ]);
