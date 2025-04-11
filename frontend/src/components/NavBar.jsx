@@ -63,7 +63,7 @@ function NavBar({ page }) {
                 {isProfileOpen && (
                   <div className="absolute right-0 top-12 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     <Link
-                      to="/profile"
+                      to="/Profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsProfileOpen(false)}
                     >
@@ -127,7 +127,7 @@ function NavBar({ page }) {
             {user && (
               <>
                 <Link
-                  to="/profile"
+                  to="/Profile"
                   className="block px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a3317] transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
