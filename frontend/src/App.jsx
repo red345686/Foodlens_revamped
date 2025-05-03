@@ -103,7 +103,6 @@ function App() {
         </>
     },
     {
-
       path: "/profile",
       element:
         <>
