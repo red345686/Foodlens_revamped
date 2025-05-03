@@ -109,9 +109,9 @@ function App() {
         <>
           {/* <NavBar page='profile' /> */}
           <Profile />
+        </>
     },
-
-  {
+    {
       path: "/contact",
       element:
         <>

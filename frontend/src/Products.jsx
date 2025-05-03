@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import Footer from './Footer'
 import NavBar from './components/NavBar';
 import GetInfoWithBarcode from './GetInfoWithBarcode';
+import GetInfoWithName from './GetInfoWithName';
 
 const Products = () => {
   const [allProducts, setAllProducts] = useState([
@@ -85,6 +86,7 @@ const Products = () => {
 
         {/* Activate this when someone wants to search product with barcode     */}
         <GetInfoWithBarcode />
+        <GetInfoWithName />
         <Footer />
       </div>
     </>

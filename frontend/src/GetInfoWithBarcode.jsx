@@ -3,13 +3,13 @@ import { useState } from "react";
 const GetInfoWithBarcode = () => {
   const [file, setFile] = useState(null);
   const [barcode, setBarcode] = useState('');
+  const [text, setText] = useState('');
   const handleBarcodeChange = (e) => {
     setBarcode(e.target.value);
   };
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
-  const [text, setText] = useState('');
   const handleTextChange = (e) => {
     setText(e.target.value);
   };
@@ -19,7 +19,7 @@ const GetInfoWithBarcode = () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/product/${barcode}`);
+      const response = await fetch(`http://localhost:5000/product/bybarcode/${barcode}`);
       if (response.ok) {
         const result = await response.json();
         console.log('Product Details:', result);

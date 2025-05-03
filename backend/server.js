@@ -3,7 +3,7 @@ import multer from 'multer';
 import cors from 'cors';
 import fs from 'fs';
 import extractBarcodeFromImage from './barcode.js'; // Your Gemini OCR logic
-import { fetchProductByBarcode } from './foodapi.js';
+import { fetchProductByBarcode, fetchProductsByCategory, searchProductsByName } from './foodapi.js';
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -39,10 +39,23 @@ app.post('/getbarcode', upload.single('file'), async (req, res) => {
   }
 });
 
-app.get('/product/:barcode', async (req, res) => {
+app.get('/product/bybarcode/:barcode', async (req, res) => {
   const { barcode } = req.params;
   try {
     const productDetails = await fetchProductByBarcode(barcode);
+    if (!productDetails) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    res.json(productDetails);
+  } catch (error) {
+    console.error('Error fetching product details:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+app.get('/product/byname/:prodName', async (req, res) => {
+  const { prodName } = req.params;
+  try {
+    const productDetails = await searchProductsByName(prodName);
     if (!productDetails) {
       return res.status(404).json({ error: 'Product not found' });
     }
