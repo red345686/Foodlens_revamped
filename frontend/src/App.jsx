@@ -103,15 +103,14 @@ function App() {
         </>
     },
     {
-
       path: "/profile",
       element:
         <>
           {/* <NavBar page='profile' /> */}
           <Profile />
+        </>
     },
-
-  {
+    {
       path: "/contact",
       element:
         <>
