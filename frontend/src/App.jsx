@@ -33,12 +33,8 @@ function App() {
         </>
     },
     {
-      path: "/community",
-      element:
-        <>
-          {/* <NavBar page='community' /> */}
-          <Community />
-        </>
+      path: "/community/*",
+      element: <Community />
     },
     {
       path: "/blogs",

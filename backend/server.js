@@ -2,14 +2,81 @@ import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { initDatabase } from './database.js';
+import userRoutes from './routes/users.js';
+import postRoutes from './routes/posts.js';
+import messageRoutes from './routes/messages.js';
 import extractBarcodeFromImage from './barcode.js'; // Your Gemini OCR logic
 import { fetchProductByBarcode, fetchProductsByCategory, searchProductsByName } from './foodapi.js';
+import admin from 'firebase-admin';
+
+dotenv.config();
+
+// Initialize Firebase Admin SDK
+// For development, you may need to use a service account JSON file
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  // If you have the service account details as a JSON string in an env var
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+} else {
+  // Try to initialize with application default credentials
+  admin.initializeApp();
+}
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ 
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      // Use absolute path with __dirname to ensure consistency
+      const uploadDir = path.join(__dirname, 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + '-' + file.originalname);
+    }
+  })
+});
+
+// Create uploads directory if it doesn't exist
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 app.use(cors());
 app.use(express.json());
+
+// Logging middleware for file access
+app.use('/uploads', (req, res, next) => {
+  console.log(`Image file requested: ${req.url}`);
+  next();
+});
+
+// Serve the uploads directory from the correct absolute path
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Connect to MongoDB
+initDatabase().then(() => {
+  console.log('Database initialized successfully');
+}).catch(err => {
+  console.error('Failed to initialize database', err);
+});
+
+// API Routes
+app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/messages', messageRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => {
