@@ -16,9 +16,20 @@ import Teams from './Teams';
 import { AuthProvider } from './AuthContext';
 import Profile from './Profile';
 import Contact from './Contact';
+import PageTransition from './components/PageTransition';
+import { AnimatePresence } from 'framer-motion';
+
+// A wrapper component for pages to apply consistent transitions
+const TransitionWrapper = ({ children, page }) => {
+  return (
+    <PageTransition>
+      {page !== 'home' && <NavBar page={page} />}
+      {children}
+    </PageTransition>
+  );
+};
 
 function App() {
-
   const router = Router([
     {
       path: "/",
@@ -26,98 +37,59 @@ function App() {
     },
     {
       path: "/products",
-      element:
-        <>
-          {/* <NavBar page='products' /> */}
-          <Products />
-        </>
+      element: <TransitionWrapper page='products'><Products /></TransitionWrapper>
     },
     {
       path: "/community/*",
-      element: <Community />
+      element: <TransitionWrapper page='community'><Community /></TransitionWrapper>
     },
     {
       path: "/blogs",
-      element:
-        <>
-          <Blogs />
-        </>
+      element: <TransitionWrapper page='blogs'><Blogs /></TransitionWrapper>
     },
     {
       path: "/explore",
-      element:
-        <>
-          {/* <NavBar page='explore' /> */}
-          <Explore />
-        </>
+      element: <TransitionWrapper page='explore'><Explore /></TransitionWrapper>
     },
     {
       path: "/login",
-      element:
-        <>
-          <Login />
-        </>
+      element: <TransitionWrapper page='login'><Login /></TransitionWrapper>
     },
     {
       path: "/about",
-      element:
-        <>
-          {/* <NavBar page='about' /> */}
-          <About />
-        </>
+      element: <TransitionWrapper page='about'><About /></TransitionWrapper>
     },
     {
       path: "/report",
-      element:
-        <>
-          {/* <NavBar page='report' /> */}
-          <Report />
-        </>
+      element: <TransitionWrapper page='report'><Report /></TransitionWrapper>
     },
     {
       path: "/faqs",
-      element:
-        <>
-          {/* <NavBar page='faqs' /> */}
-          <FAQs />
-        </>
+      element: <TransitionWrapper page='faqs'><FAQs /></TransitionWrapper>
     },
     {
       path: "/contribute",
-      element:
-        <>
-          {/* <NavBar page='contribute' /> */}
-          <Contribute />
-        </>
+      element: <TransitionWrapper page='contribute'><Contribute /></TransitionWrapper>
     },
     {
       path: "/teams",
-      element:
-        <>
-          {/* <NavBar page='teams' /> */}
-          <Teams />
-        </>
+      element: <TransitionWrapper page='teams'><Teams /></TransitionWrapper>
     },
     {
       path: "/profile",
-      element:
-        <>
-          {/* <NavBar page='profile' /> */}
-          <Profile />
-        </>
+      element: <TransitionWrapper page='profile'><Profile /></TransitionWrapper>
     },
     {
       path: "/contact",
-      element:
-        <>
-          {/* <NavBar page='contact' /> */}
-          <Contact />
-        </>
+      element: <TransitionWrapper page='contact'><Contact /></TransitionWrapper>
     }
   ]);
+  
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <AnimatePresence mode="wait">
+        <RouterProvider router={router} />
+      </AnimatePresence>
     </AuthProvider>
   );
 }

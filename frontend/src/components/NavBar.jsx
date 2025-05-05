@@ -3,6 +3,8 @@ import { FaSignOutAlt } from "react-icons/fa";
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
+import { motion, AnimatePresence } from 'framer-motion';
+import { buttonHover, buttonTap } from './animations';
 
 function NavBar({ page }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,61 +34,185 @@ function NavBar({ page }) {
     { path: '/contact', label: 'Contact', page: 'contact' },
   ];
 
+  // Animation variants
+  const headerVariants = {
+    hidden: { opacity: 0, y: -20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.5,
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const logoVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { 
+      opacity: 1, 
+      x: 0,
+      transition: { 
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  };
+
+  const linkVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        type: "spring",
+        stiffness: 120
+      }
+    }
+  };
+
+  const mobileMenuVariants = {
+    hidden: { opacity: 0, height: 0 },
+    visible: { 
+      opacity: 1, 
+      height: "auto",
+      transition: { 
+        duration: 0.3,
+        when: "beforeChildren",
+        staggerChildren: 0.05
+      }
+    },
+    exit: {
+      opacity: 0,
+      height: 0,
+      transition: { 
+        duration: 0.3,
+        when: "afterChildren"
+      }
+    }
+  };
+
+  const dropdownVariants = {
+    hidden: { opacity: 0, y: -5, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: { 
+        duration: 0.2,
+        type: "spring",
+        stiffness: 300
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      y: -5, 
+      scale: 0.95,
+      transition: { duration: 0.15 }
+    }
+  };
+
   return (
-    <header className={`w-full ${page === 'home' ? 'bg-transparent' : 'bg-[#294c25]'} backdrop-filter fixed top-0 z-50 ${page === 'home' ? 'backdrop-blur' : ''}`}>
+    <motion.header 
+      className={`w-full ${page === 'home' ? 'bg-transparent' : 'bg-[#294c25]'} backdrop-filter fixed top-0 z-50 ${page === 'home' ? 'backdrop-blur' : ''}`}
+      initial="hidden"
+      animate="visible"
+      variants={headerVariants}
+    >
       <nav className="container mx-auto px-4 sm:px-6 py-2">
         <div className={`flex items-center ${page === 'home' ? 'justify-end' : 'justify-between'}`}>
-          <Link to='/' className={`flex items-center ${page === 'home' ? 'absolute left-6' : ''}`}>
-            <img className="w-8 sm:w-10 rounded-lg" src="logo.png" alt="FoodLens Logo" />
-            <span className='mx-2 text-xl sm:text-2xl text-white'>FoodLens</span>
-          </Link>
+          <motion.div variants={logoVariants}>
+            <Link to='/' className={`flex items-center ${page === 'home' ? 'absolute left-6' : ''}`}>
+              <motion.img 
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-8 sm:w-10 rounded-lg" 
+                src="logo.png" 
+                alt="FoodLens Logo" 
+              />
+              <motion.span 
+                className='mx-2 text-xl sm:text-2xl text-white'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                FoodLens
+              </motion.span>
+            </Link>
+          </motion.div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6 lg:space-x-10 font-sans text-base lg:text-lg">
-            {navLinks.map((link) => (
-              <Link
+            {navLinks.map((link, index) => (
+              <motion.div
                 key={link.path}
-                className={`${(page === link.page || page === 'home') ? 'text-white' : 'text-gray-400 hover:text-white transition-colors'
-                  }`}
-                to={link.path}
+                variants={linkVariants}
+                custom={index}
+                whileHover={{ y: -2 }}
               >
-                {link.label}
-              </Link>
+                <Link
+                  className={`${(page === link.page || page === 'home') ? 'text-white' : 'text-gray-400 hover:text-white transition-colors'
+                    }`}
+                  to={link.path}
+                >
+                  {link.label}
+                </Link>
+              </motion.div>
             ))}
             {user && (
-              <div className="relative flex items-center justify-center">
-                <button
+              <motion.div 
+                className="relative flex items-center justify-center"
+                variants={linkVariants}
+              >
+                <motion.button
                   onClick={toggleProfile}
                   className="flex items-center justify-center text-white hover:text-gray-200"
+                  whileHover={buttonHover}
+                  whileTap={buttonTap}
                 >
                   <CgProfile className="w-10 h-10" />
-                </button>
-                {isProfileOpen && (
-                  <div className="absolute right-0 top-12 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <Link
-                      to="/Profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => setIsProfileOpen(false)}
+                </motion.button>
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div 
+                      className="absolute right-0 top-12 w-48 bg-white rounded-md shadow-lg py-1 z-50"
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={dropdownVariants}
                     >
-                      My Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
+                      <motion.div whileHover={{ backgroundColor: "#f3f4f6" }}>
+                        <Link
+                          to="/Profile"
+                          className="block px-4 py-2 text-sm text-gray-700"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          My Profile
+                        </Link>
+                      </motion.div>
+                      <motion.div whileHover={{ backgroundColor: "#f3f4f6" }}>
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700"
+                        >
+                          Sign Out
+                        </button>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             )}
           </div>
 
           {/* Mobile Menu Button */}
-          <button
+          <motion.button
             className="md:hidden text-white p-2 rounded-lg hover:bg-[#1a3317] transition-colors"
             onClick={toggleMenu}
             aria-label="Toggle menu"
+            whileHover={buttonHover}
+            whileTap={buttonTap}
           >
             <svg
               className="w-6 h-6"
@@ -103,49 +229,72 @@ function NavBar({ page }) {
                 <path d="M4 6h16M4 12h16M4 18h16" />
               )}
             </svg>
-          </button>
+          </motion.button>
         </div>
 
         {/* Mobile Navigation */}
-        <div
-          className={`md:hidden transition-all duration-300 ease-in-out ${isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
-            } overflow-hidden`}
-        >
-          <div className="py-2 space-y-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                className={`block px-4 py-2 rounded-lg ${(page === link.page)
-                  ? 'text-white bg-[#1a3317]'
-                  : 'text-gray-400 hover:text-white hover:bg-[#1a3317] transition-colors'
-                  }`}
-                to={link.path}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {user && (
-              <>
-                <Link
-                  to="/Profile"
-                  className="block px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a3317] transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  My Profile
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a3317] transition-colors"
-                >
-                  Sign Out
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              className="md:hidden overflow-hidden"
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={mobileMenuVariants}
+            >
+              <div className="py-2 space-y-2">
+                {navLinks.map((link, index) => (
+                  <motion.div
+                    key={link.path}
+                    variants={linkVariants}
+                    custom={index}
+                    whileHover={{ x: 5 }}
+                  >
+                    <Link
+                      className={`block px-4 py-2 rounded-lg ${(page === link.page)
+                        ? 'text-white bg-[#1a3317]'
+                        : 'text-gray-400 hover:text-white hover:bg-[#1a3317] transition-colors'
+                        }`}
+                      to={link.path}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ))}
+                {user && (
+                  <>
+                    <motion.div
+                      variants={linkVariants}
+                      whileHover={{ x: 5 }}
+                    >
+                      <Link
+                        to="/Profile"
+                        className="block px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a3317] transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        My Profile
+                      </Link>
+                    </motion.div>
+                    <motion.div
+                      variants={linkVariants}
+                      whileHover={{ x: 5 }}
+                    >
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-[#1a3317] transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
-    </header>
+    </motion.header>
   );
 }
 

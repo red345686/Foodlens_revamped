@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo, useRef, memo } from 'react';
 import { UserContext } from '../../context/UserContext';
 import { postAPI } from '../../services/api';
 import Post from './Post';
 import CreatePost from './CreatePost';
 import { Link } from 'react-router-dom';
+import { FaInfoCircle } from 'react-icons/fa';
 
 // API base URL for images
 const API_BASE_URL = 'http://localhost:3000';
@@ -83,6 +84,75 @@ const PostsList = React.memo(({ posts, currentUser, onLike, onComment, onDelete 
   return true;
 });
 
+// Feed header component with recommendation explanation
+const FeedHeader = memo(({ currentUser }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipRef = useRef(null);
+  
+  // Handle click outside to close tooltip
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setShowTooltip(false);
+      }
+    };
+    
+    if (showTooltip) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showTooltip]);
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-[#294c25]">
+          {currentUser ? 'For You' : 'Community Feed'}
+        </h2>
+        <div className="relative">
+          <button 
+            className="text-gray-500 hover:text-[#294c25]"
+            onClick={() => setShowTooltip(!showTooltip)}
+            aria-label="Feed information"
+          >
+            <FaInfoCircle size={18} />
+          </button>
+          
+          {showTooltip && (
+            <div 
+              ref={tooltipRef}
+              className="absolute right-0 top-6 w-72 bg-white shadow-lg rounded-md p-3 z-10 text-sm border"
+            >
+              <h3 className="font-medium mb-2">How posts are ranked:</h3>
+              <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                <li><span className="font-medium">Recency:</span> Newer posts appear higher</li>
+                <li><span className="font-medium">Engagement:</span> Posts with more likes and comments rank higher</li>
+                {currentUser && (
+                  <>
+                    <li><span className="font-medium">Following:</span> Posts from people you follow are prioritized</li>
+                    <li><span className="font-medium">Interactions:</span> Content similar to posts you've engaged with appears more frequently</li>
+                  </>
+                )}
+              </ul>
+              <div className="mt-2 pt-2 border-t text-xs text-gray-500">
+                Click outside to close
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <p className="text-gray-600 text-sm mt-1">
+        {currentUser 
+          ? 'Posts are personalized based on your interests and activity.'
+          : 'Popular posts from the community.'}
+      </p>
+    </div>
+  );
+});
+
 // Main Feed component
 const Feed = () => {
   const { currentUser } = useContext(UserContext);
@@ -120,7 +190,8 @@ const Feed = () => {
       isFetchingRef.current = true;
       setLoading(true);
       
-      const response = await postAPI.getFeed();
+      // Pass current user ID for personalized recommendations
+      const response = await postAPI.getFeed(currentUser?._id);
       console.log('Fetched posts:', response.data);
       
       // Process posts to fix image URLs
@@ -137,7 +208,7 @@ const Feed = () => {
         isFetchingRef.current = false;
       }, 300);
     }
-  }, [processPostData]); // Add processPostData to dependencies
+  }, [processPostData, currentUser]);
 
   useEffect(() => {
     let isMounted = true;
@@ -299,6 +370,9 @@ const Feed = () => {
           <LoginUI />
         )
       )}
+      
+      {/* Feed Header with recommendation explanation */}
+      {showContent && <FeedHeader currentUser={currentUser} />}
       
       {/* Loading, Error, or Posts */}
       {showLoading && <LoadingUI />}

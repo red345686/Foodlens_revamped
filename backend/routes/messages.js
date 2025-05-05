@@ -4,6 +4,64 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
+// Check messaging permission between users
+const canSendMessage = async (senderId, recipientId) => {
+  try {
+    const recipient = await User.findById(recipientId);
+    if (!recipient) {
+      return { allowed: false, reason: 'Recipient not found' };
+    }
+    
+    // Check if sender is blocked
+    if (recipient.messagingPrivacy?.blockedUsers?.includes(senderId)) {
+      return { allowed: false, reason: 'You have been blocked by this user' };
+    }
+    
+    // Check privacy settings
+    const privacySetting = recipient.messagingPrivacy?.allowMessagesFrom || 'everyone';
+    
+    if (privacySetting === 'everyone') {
+      return { allowed: true };
+    }
+    
+    const sender = await User.findById(senderId);
+    if (!sender) {
+      return { allowed: false, reason: 'Sender not found' };
+    }
+    
+    // Check specific privacy settings
+    if (privacySetting === 'following') {
+      // Can message if recipient is following sender
+      if (recipient.following.includes(senderId)) {
+        return { allowed: true };
+      }
+      return { allowed: false, reason: 'This user only accepts messages from people they follow' };
+    }
+    
+    if (privacySetting === 'followers') {
+      // Can message if sender is following recipient
+      if (sender.following.includes(recipientId)) {
+        return { allowed: true };
+      }
+      return { allowed: false, reason: 'This user only accepts messages from their followers' };
+    }
+    
+    if (privacySetting === 'mutualFollows') {
+      // Can message only if both users follow each other
+      if (recipient.following.includes(senderId) && sender.following.includes(recipientId)) {
+        return { allowed: true };
+      }
+      return { allowed: false, reason: 'This user only accepts messages from mutual connections' };
+    }
+    
+    // Default fallback
+    return { allowed: false, reason: 'Unable to send message due to privacy settings' };
+  } catch (error) {
+    console.error('Error checking message permissions:', error);
+    return { allowed: false, reason: 'Error checking permissions' };
+  }
+};
+
 // Send a message
 router.post('/', async (req, res) => {
   try {
@@ -21,12 +79,10 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ error: 'Recipient user not found' });
     }
     
-    // Check if sender follows recipient or vice versa
-    const senderFollowsRecipient = sender.following.includes(recipientId);
-    const recipientFollowsSender = recipient.following.includes(senderId);
-    
-    if (!senderFollowsRecipient && !recipientFollowsSender) {
-      return res.status(403).json({ error: 'You can only message users you follow or who follow you' });
+    // Check messaging permissions
+    const permissionCheck = await canSendMessage(senderId, recipientId);
+    if (!permissionCheck.allowed) {
+      return res.status(403).json({ error: permissionCheck.reason });
     }
     
     // Create and save message
@@ -48,6 +104,24 @@ router.post('/', async (req, res) => {
 router.get('/:userId/:otherUserId', async (req, res) => {
   try {
     const { userId, otherUserId } = req.params;
+    
+    // Verify both users exist
+    const [user, otherUser] = await Promise.all([
+      User.findById(userId),
+      User.findById(otherUserId)
+    ]);
+    
+    if (!user || !otherUser) {
+      return res.status(404).json({ error: 'One or both users not found' });
+    }
+    
+    // Check if either user has blocked the other
+    if (
+      user.messagingPrivacy?.blockedUsers?.includes(otherUserId) ||
+      otherUser.messagingPrivacy?.blockedUsers?.includes(userId)
+    ) {
+      return res.status(403).json({ error: 'Cannot view this conversation' });
+    }
     
     // Get messages where user is either sender or recipient
     const messages = await Message.find({
@@ -155,7 +229,7 @@ router.get('/conversations/:userId', async (req, res) => {
       })
     );
     
-    // Sort by latest message time
+    // Sort conversations by latest message
     conversations.sort((a, b) => {
       if (!a.latestMessage) return 1;
       if (!b.latestMessage) return -1;
@@ -163,6 +237,128 @@ router.get('/conversations/:userId', async (req, res) => {
     });
     
     res.status(200).json(conversations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update user messaging privacy settings
+router.put('/privacy/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { allowMessagesFrom } = req.body;
+    
+    // Validate privacy setting
+    const validSettings = ['everyone', 'following', 'followers', 'mutualFollows'];
+    if (allowMessagesFrom && !validSettings.includes(allowMessagesFrom)) {
+      return res.status(400).json({ error: 'Invalid privacy setting' });
+    }
+    
+    // Update the user's privacy settings
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { 
+        'messagingPrivacy.allowMessagesFrom': allowMessagesFrom 
+      },
+      { new: true }
+    );
+    
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.status(200).json({
+      message: 'Privacy settings updated',
+      privacy: updatedUser.messagingPrivacy
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Block a user from sending messages
+router.post('/block/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { blockedUserId } = req.body;
+    
+    // Validate IDs
+    if (userId === blockedUserId) {
+      return res.status(400).json({ error: 'Cannot block yourself' });
+    }
+    
+    // Check if both users exist
+    const [user, blockedUser] = await Promise.all([
+      User.findById(userId),
+      User.findById(blockedUserId)
+    ]);
+    
+    if (!user || !blockedUser) {
+      return res.status(404).json({ error: 'One or both users not found' });
+    }
+    
+    // Check if already blocked
+    if (user.messagingPrivacy?.blockedUsers?.includes(blockedUserId)) {
+      return res.status(400).json({ error: 'User is already blocked' });
+    }
+    
+    // Add to blocked list
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $push: { 'messagingPrivacy.blockedUsers': blockedUserId } },
+      { new: true }
+    );
+    
+    res.status(200).json({
+      message: 'User blocked successfully',
+      blockedUsers: updatedUser.messagingPrivacy.blockedUsers
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Unblock a user
+router.post('/unblock/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { unblockedUserId } = req.body;
+    
+    // Update the user's blocked list
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { 'messagingPrivacy.blockedUsers': unblockedUserId } },
+      { new: true }
+    );
+    
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.status(200).json({
+      message: 'User unblocked successfully',
+      blockedUsers: updatedUser.messagingPrivacy.blockedUsers
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get blocked users list
+router.get('/blocked/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await User.findById(userId)
+      .populate('messagingPrivacy.blockedUsers', 'username profilePicture');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.status(200).json({
+      blockedUsers: user.messagingPrivacy?.blockedUsers || []
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

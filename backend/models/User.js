@@ -18,6 +18,14 @@ const userSchema = new mongoose.Schema({
     read: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
   }],
+  messagingPrivacy: {
+    allowMessagesFrom: { 
+      type: String, 
+      enum: ['everyone', 'following', 'followers', 'mutualFollows'], 
+      default: 'everyone' 
+    },
+    blockedUsers: [{ type: String, ref: 'User' }]
+  },
   isActive: { type: Boolean, default: true },
   lastSeen: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now }

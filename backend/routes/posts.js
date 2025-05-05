@@ -110,12 +110,14 @@ router.post('/', upload.array('images', 5), async (req, res) => {
 // Get all posts (feed)
 router.get('/feed', async (req, res) => {
   try {
+    // Get user ID from query if available (for personalized feed)
+    const currentUserId = req.query.userId;
+    
+    // Get all non-archived posts
     const posts = await Post.find({ isArchived: false })
-      .sort({ createdAt: -1 })
       .populate({
         path: 'user',
-        select: 'username profilePicture',
-        // Provide default values in case user is null
+        select: 'username profilePicture following',
         match: { isActive: { $ne: false } }, // Only match active users
       })
       .populate({
@@ -128,7 +130,7 @@ router.get('/feed', async (req, res) => {
       });
     
     // Filter out posts where user is null (deleted users)
-    const filteredPosts = posts.filter(post => post.user !== null);
+    let filteredPosts = posts.filter(post => post.user !== null);
     
     // Ensure all comments have valid users
     filteredPosts.forEach(post => {
@@ -136,9 +138,79 @@ router.get('/feed', async (req, res) => {
         post.comments = post.comments.filter(comment => comment.user !== null);
       }
     });
+
+    // Get the current user if ID is provided
+    let currentUser = null;
+    if (currentUserId) {
+      currentUser = await User.findById(currentUserId);
+    }
     
-    res.status(200).json(filteredPosts);
+    // Score and sort posts by relevance
+    const scoredPosts = filteredPosts.map(post => {
+      // Calculate base score components
+      const now = new Date();
+      const postDate = new Date(post.createdAt);
+      const postAge = (now - postDate) / (1000 * 60 * 60); // Age in hours
+      
+      // Recency score (higher for newer posts) - decays exponentially over time
+      const recencyScore = Math.exp(-postAge / 24); // Half-life of 24 hours
+      
+      // Engagement score (likes + comments)
+      const likeCount = post.likes.length || 0;
+      const commentCount = post.comments.length || 0;
+      const engagementScore = likeCount * 1 + commentCount * 2; // Comments weighted more
+      
+      // User relevance score (personalized if user is logged in)
+      let userRelevanceScore = 0;
+      
+      if (currentUser) {
+        // Posts from users that the current user follows get a boost
+        const isFollowing = currentUser.following && 
+                           currentUser.following.includes(post.user._id.toString());
+        
+        // Posts that the current user has interacted with get a boost
+        const hasLiked = post.likes.some(like => like._id.toString() === currentUserId);
+        const hasCommented = post.comments.some(comment => 
+          comment.user && comment.user._id.toString() === currentUserId
+        );
+        
+        // Add user relevance factors
+        userRelevanceScore += isFollowing ? 15 : 0;
+        userRelevanceScore += hasLiked ? 10 : 0;
+        userRelevanceScore += hasCommented ? 5 : 0;
+      }
+      
+      // Calculate final score
+      const finalScore = (
+        (recencyScore * 30) +       // 30% weight for recency
+        (engagementScore * 0.5) +   // 50% weight for engagement (scaled)
+        userRelevanceScore          // User relevance is additive
+      );
+      
+      // Calculate relevance percentage (for UI display) - max possible score is ~50-60
+      const maxTheoreticalScore = 60;
+      const relevancePercentage = Math.min(100, Math.round((finalScore / maxTheoreticalScore) * 100));
+      
+      return {
+        ...post.toObject(),
+        _recommendationScore: finalScore,
+        relevanceScore: relevancePercentage
+      };
+    });
+    
+    // Sort posts by score (highest first)
+    const sortedPosts = scoredPosts.sort((a, b) => b._recommendationScore - a._recommendationScore);
+    
+    // Remove the internal score but keep the relevance percentage
+    const recommendedPosts = sortedPosts.map(post => {
+      const { _recommendationScore, ...postWithPublicScore } = post;
+      return postWithPublicScore;
+    });
+    
+    console.log(`Returning ${recommendedPosts.length} recommended posts`);
+    res.status(200).json(recommendedPosts);
   } catch (error) {
+    console.error('Error fetching feed:', error);
     res.status(500).json({ error: error.message });
   }
 });

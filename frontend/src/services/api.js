@@ -106,7 +106,10 @@ export const postAPI = {
       return response;
     });
   },
-  getFeed: () => api.get('/posts/feed'),
+  getFeed: (userId) => {
+    const url = userId ? `/posts/feed?userId=${userId}` : '/posts/feed';
+    return api.get(url);
+  },
   getUserPosts: (userId) => api.get(`/posts/user/${userId}`),
   getPost: (postId) => api.get(`/posts/${postId}`),
   likePost: (postId, userId) => api.post(`/posts/${postId}/like`, { userId }),
@@ -122,6 +125,10 @@ export const messageAPI = {
   markAsRead: (senderId, recipientId) => api.put(`/messages/read/${senderId}/${recipientId}`),
   getUnreadCount: (userId) => api.get(`/messages/unread/${userId}`),
   getConversations: (userId) => api.get(`/messages/conversations/${userId}`),
+  updatePrivacySettings: (userId, settings) => api.put(`/messages/privacy/${userId}`, settings),
+  blockUser: (userId, blockedUserId) => api.post(`/messages/block/${userId}`, { blockedUserId }),
+  unblockUser: (userId, unblockedUserId) => api.post(`/messages/unblock/${userId}`, { unblockedUserId }),
+  getBlockedUsers: (userId) => api.get(`/messages/blocked/${userId}`),
 };
 
 export default {
