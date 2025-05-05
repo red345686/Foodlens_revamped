@@ -9,6 +9,7 @@ import { initDatabase } from './database.js';
 import userRoutes from './routes/users.js';
 import postRoutes from './routes/posts.js';
 import messageRoutes from './routes/messages.js';
+import productRoutes from './routes/products.js';
 import extractBarcodeFromImage from './barcode.js'; // Your Gemini OCR logic
 import { fetchProductByBarcode, fetchProductsByCategory, searchProductsByName } from './foodapi.js';
 import admin from 'firebase-admin';
@@ -77,8 +78,9 @@ initDatabase().then(() => {
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/products', productRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 app.get('/', (req, res) => {
   res.send('Hello, Backend is running!');
 });

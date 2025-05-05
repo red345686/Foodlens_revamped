@@ -3,6 +3,7 @@ import About from './About';
 import NavBar from './components/NavBar';
 import { createBrowserRouter as Router, RouterProvider } from 'react-router-dom'
 import Products from './Products';
+import ProductDetail from './ProductDetail';
 import Community from './Community';
 import Blogs from './Blogs';
 import Home from './Home';
@@ -38,6 +39,10 @@ function App() {
     {
       path: "/products",
       element: <TransitionWrapper page='products'><Products /></TransitionWrapper>
+    },
+    {
+      path: "/product/:id",
+      element: <TransitionWrapper page='products'><ProductDetail /></TransitionWrapper>
     },
     {
       path: "/community/*",
