@@ -293,7 +293,7 @@ const Products = () => {
   };
 
   // Helper function to get the correct image URL
-  const getImageUrl = (product) => {
+  const getImageUrl = (product, imageType = 'product') => {
     // For debugging
     console.log("Processing image for product:", product.name);
     
@@ -305,16 +305,56 @@ const Products = () => {
       return product.image;
     }
     
+    // Get the formatted image name based on image type
+    let formattedName;
+    switch(imageType) {
+      case 'product':
+        formattedName = product.formattedProductImageName;
+        break;
+      case 'ingredients':
+        formattedName = product.formattedIngredientsImageName;
+        break;
+      case 'nutrients':
+        formattedName = product.formattedNutrientsImageName;
+        break;
+      default:
+        formattedName = null;
+    }
+    
+    // If we have a formatted name, use it with our new endpoint
+    if (formattedName) {
+      console.log("Using formatted image name URL:", `${API_URL}/api/products/images/${formattedName}`);
+      return `${API_URL}/api/products/images/${formattedName}`;
+    }
+    
+    // Use the appropriate formatted image name based on image type
+    let imagePath;
+    
+    switch(imageType) {
+      case 'product':
+        // Use product photo path or default image path
+        imagePath = product.productPhotoPath || product.imagePath;
+        break;
+      case 'ingredients':
+        imagePath = product.ingredientsImagePath;
+        break;
+      case 'nutrients':
+        imagePath = product.nutritionalContentImagePath;
+        break;
+      default:
+        imagePath = product.imagePath;
+    }
+    
     // Check if we have an imagePath from the API
-    if (product.imagePath) {
+    if (imagePath) {
       // If it's already a full URL
-      if (product.imagePath.startsWith('http')) {
-        console.log("Using full image URL:", product.imagePath);
-        return product.imagePath;
+      if (imagePath.startsWith('http')) {
+        console.log("Using full image URL:", imagePath);
+        return imagePath;
       }
       
       // If it's a relative path
-      const fullPath = `${API_URL}/${product.imagePath.replace(/\\/g, '/')}`;
+      const fullPath = `${API_URL}/${imagePath.replace(/\\/g, '/')}`;
       console.log("Using constructed image URL:", fullPath);
       return fullPath;
     }
@@ -748,7 +788,7 @@ const Products = () => {
               >
                 <div className="h-48 bg-gray-100 relative overflow-hidden">
                   <img 
-                    src={getImageUrl(product)}
+                    src={getImageUrl(product, 'product')}
                     alt={product.name}
                     className="w-full h-full object-cover transition duration-300 transform hover:scale-105"
                     loading="lazy"

@@ -7,7 +7,7 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Helper function to get the correct image URL
-const getImageUrl = (product) => {
+const getImageUrl = (product, imageType = 'product') => {
   if (!product) return null;
   
   // Check if using mock data (which has 'image' property)
@@ -15,15 +15,54 @@ const getImageUrl = (product) => {
     return product.image;
   }
   
+  // Get the formatted image name based on image type
+  let formattedName;
+  switch(imageType) {
+    case 'product':
+      formattedName = product.formattedProductImageName;
+      break;
+    case 'ingredients':
+      formattedName = product.formattedIngredientsImageName;
+      break;
+    case 'nutrients':
+      formattedName = product.formattedNutrientsImageName;
+      break;
+    default:
+      formattedName = null;
+  }
+  
+  // If we have a formatted name, use it with our new endpoint
+  if (formattedName) {
+    return `${API_URL}/api/products/images/${formattedName}`;
+  }
+  
+  // Use the appropriate formatted image name based on image type
+  let imagePath;
+  
+  switch(imageType) {
+    case 'product':
+      // Use product photo path or default image path
+      imagePath = product.productPhotoPath || product.imagePath;
+      break;
+    case 'ingredients':
+      imagePath = product.ingredientsImagePath;
+      break;
+    case 'nutrients':
+      imagePath = product.nutritionalContentImagePath;
+      break;
+    default:
+      imagePath = product.imagePath;
+  }
+  
   // Check if we have an imagePath from the API
-  if (product.imagePath) {
+  if (imagePath) {
     // If it's already a full URL
-    if (product.imagePath.startsWith('http')) {
-      return product.imagePath;
+    if (imagePath.startsWith('http')) {
+      return imagePath;
     }
     
     // If it's a relative path
-    const fullPath = `${API_URL}/${product.imagePath.replace(/\\/g, '/')}`;
+    const fullPath = `${API_URL}/${imagePath.replace(/\\/g, '/')}`;
     return fullPath;
   }
   
@@ -348,7 +387,7 @@ const ProductDetail = () => {
                       {/* Product Image */}
                       <div className="bg-gray-100 p-4 rounded-lg flex items-center justify-center h-64">
                         <img 
-                          src={getImageUrl(product)}
+                          src={getImageUrl(product, 'product')}
                           alt={product.name}
                           className="max-w-full h-auto max-h-64 object-contain rounded shadow"
                           loading="lazy"
@@ -361,21 +400,25 @@ const ProductDetail = () => {
                       </div>
                       
                       {/* Ingredients Image */}
-                      {product.ingredientsImagePath && (
-                        <div className="bg-gray-100 p-4 rounded-lg flex items-center justify-center h-64">
-                          <img 
-                            src={`${API_URL}/${product.ingredientsImagePath.replace(/\\/g, '/')}`}
-                            alt="Ingredients list"
-                            className="max-w-full h-auto max-h-64 object-contain rounded shadow"
-                            loading="lazy"
-                            onError={(e) => {
-                              console.log("Ingredients image failed to load:", e.target.src);
-                              e.target.onerror = null;
-                              e.target.src = 'https://images.unsplash.com/photo-1555633514-abcee6ab92e1?auto=format&fit=crop&w=400&q=80';
-                            }}
-                          />
-                        </div>
-                      )}
+                      <div className="bg-gray-100 p-4 rounded-lg">
+                        <h3 className="font-semibold text-gray-700 mb-3">Ingredients</h3>
+                        {product.ingredientsImagePath ? (
+                          <div className="flex items-center justify-center">
+                            <img 
+                              src={getImageUrl(product, 'ingredients')}
+                              alt="Ingredients"
+                              className="max-w-full h-auto max-h-64 object-contain rounded shadow"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = 'https://via.placeholder.com/400x300?text=No+Image+Available';
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 italic">No ingredients image available</p>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Safety Score */}
@@ -509,6 +552,25 @@ const ProductDetail = () => {
                     <Link to="/analyze-ingredients" className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
                       Upload Ingredients Image
                     </Link>
+                  </div>
+                )}
+
+                {/* Add Nutritional Content Image if available */}
+                {product.nutritionalContentImagePath && (
+                  <div className="mt-6 bg-gray-100 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-700 mb-3">Nutritional Information</h3>
+                    <div className="flex items-center justify-center">
+                      <img 
+                        src={getImageUrl(product, 'nutrients')}
+                        alt="Nutritional Information"
+                        className="max-w-full h-auto max-h-64 object-contain rounded shadow"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://via.placeholder.com/400x300?text=No+Image+Available';
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>

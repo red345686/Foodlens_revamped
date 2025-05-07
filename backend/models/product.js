@@ -14,6 +14,10 @@ const productSchema = new mongoose.Schema({
   ingredientsImagePath: String,
   productPhotoPath: String,
   nutritionalContentImagePath: String,
+  // These fields will store the formatted image names with productname_imagetype format
+  formattedProductImageName: String,
+  formattedIngredientsImageName: String,
+  formattedNutrientsImageName: String,
   productData: {
     type: Object,
     required: true
@@ -54,6 +58,22 @@ const productSchema = new mongoose.Schema({
 productSchema.index({ barcode: 1 }, { unique: true, sparse: true });
 
 productSchema.pre('save', function(next) {
+  // Format image names with productname_imagetype pattern if not already set
+  if (this.name && this.productPhotoPath && !this.formattedProductImageName) {
+    const sanitizedName = this.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    this.formattedProductImageName = `${sanitizedName}_productimage`;
+  }
+  
+  if (this.name && this.ingredientsImagePath && !this.formattedIngredientsImageName) {
+    const sanitizedName = this.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    this.formattedIngredientsImageName = `${sanitizedName}_ingredientsimage`;
+  }
+  
+  if (this.name && this.nutritionalContentImagePath && !this.formattedNutrientsImageName) {
+    const sanitizedName = this.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    this.formattedNutrientsImageName = `${sanitizedName}_nutrientsimage`;
+  }
+
   if (!this.analysis) {
     this.analysis = {
       nutritionScore: 50,

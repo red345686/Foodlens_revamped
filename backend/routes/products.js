@@ -23,8 +23,29 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    // Use product name from request body with file type as suffix for better identification
+    const productName = req.body.name ? req.body.name.toLowerCase().replace(/[^a-z0-9]/g, '_') : '';
+    let fileType = '';
+    
+    if (file.fieldname === 'productPhoto') {
+      fileType = 'productimage';
+    } else if (file.fieldname === 'ingredientsImage') {
+      fileType = 'ingredientsimage';
+    } else if (file.fieldname === 'nutritionalContentImage') {
+      fileType = 'nutrientsimage';
+    } else {
+      fileType = file.fieldname;
+    }
+    
+    // If product name is provided, use productname_imagetype format
+    if (productName) {
+      const fileName = `${productName}_${fileType}${path.extname(file.originalname)}`;
+      cb(null, fileName);
+    } else {
+      // Fallback to timestamp based naming if no product name is provided
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
   }
 });
 
@@ -106,8 +127,25 @@ router.post('/analyze-ingredients', upload.fields([
         product.ingredientsImagePath = ingredientsImagePath;
         
         // Add product photo and nutrition image paths if they exist
-        if (productPhotoPath) product.productPhotoPath = productPhotoPath;
-        if (nutritionalContentImagePath) product.nutritionalContentImagePath = nutritionalContentImagePath;
+        if (productPhotoPath) {
+          product.productPhotoPath = productPhotoPath;
+          // Set formatted product image name
+          const sanitizedName = product.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+          product.formattedProductImageName = `${sanitizedName}_productimage`;
+        }
+        
+        if (nutritionalContentImagePath) {
+          product.nutritionalContentImagePath = nutritionalContentImagePath;
+          // Set formatted nutrients image name
+          const sanitizedName = product.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+          product.formattedNutrientsImageName = `${sanitizedName}_nutrientsimage`;
+        }
+        
+        // Set formatted ingredients image name
+        if (ingredientsImagePath) {
+          const sanitizedName = product.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+          product.formattedIngredientsImageName = `${sanitizedName}_ingredientsimage`;
+        }
         
         product.ingredients = ingredientAnalysis.ingredients || [];
         product.ingredientAnalysis = {
@@ -138,13 +176,24 @@ router.post('/analyze-ingredients', upload.fields([
         const uniqueId = new mongoose.Types.ObjectId().toString();
         
         console.log('Creating new product with ingredients analysis');
+        const productName = name || 'Unknown Product';
+        const sanitizedName = productName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        
+        // Create formatted image names
+        const formattedProductImageName = productPhotoPath ? `${sanitizedName}_productimage` : null;
+        const formattedIngredientsImageName = ingredientsImagePath ? `${sanitizedName}_ingredientsimage` : null;
+        const formattedNutrientsImageName = nutritionalContentImagePath ? `${sanitizedName}_nutrientsimage` : null;
+        
         product = new Product({
-          name: name || 'Unknown Product',
+          name: productName,
           // Add a unique string in the barcode field to avoid null value
           barcode: `ocr_${uniqueId}`,
           ingredientsImagePath: ingredientsImagePath,
           productPhotoPath: productPhotoPath,
           nutritionalContentImagePath: nutritionalContentImagePath,
+          formattedProductImageName: formattedProductImageName,
+          formattedIngredientsImageName: formattedIngredientsImageName,
+          formattedNutrientsImageName: formattedNutrientsImageName,
           ingredients: ingredientAnalysis.ingredients || [],
           ingredientAnalysis: {
             extractedText: ingredientAnalysis.extractedText || '',
@@ -190,6 +239,9 @@ router.post('/analyze-ingredients', upload.fields([
         ingredientsImagePath: product.ingredientsImagePath,
         productPhotoPath: product.productPhotoPath,
         nutritionalContentImagePath: product.nutritionalContentImagePath,
+        formattedProductImageName: product.formattedProductImageName,
+        formattedIngredientsImageName: product.formattedIngredientsImageName,
+        formattedNutrientsImageName: product.formattedNutrientsImageName,
         ingredients: product.ingredients,
         ingredientAnalysis: product.ingredientAnalysis,
         productData: product.productData
@@ -456,6 +508,34 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
     
+    // Check and regenerate formatted image names if missing
+    let needsUpdate = false;
+    
+    if (product.name) {
+      const sanitizedName = product.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      
+      if (product.productPhotoPath && !product.formattedProductImageName) {
+        product.formattedProductImageName = `${sanitizedName}_productimage`;
+        needsUpdate = true;
+      }
+      
+      if (product.ingredientsImagePath && !product.formattedIngredientsImageName) {
+        product.formattedIngredientsImageName = `${sanitizedName}_ingredientsimage`;
+        needsUpdate = true;
+      }
+      
+      if (product.nutritionalContentImagePath && !product.formattedNutrientsImageName) {
+        product.formattedNutrientsImageName = `${sanitizedName}_nutrientsimage`;
+        needsUpdate = true;
+      }
+    }
+    
+    // Save the product if any formatted image names were updated
+    if (needsUpdate) {
+      await product.save();
+      console.log(`Updated formatted image names for product ${product._id}`);
+    }
+    
     // Add detailed logging about the analysis data
     console.log('Product found, analysis data:', {
       hasAnalysis: !!product.analysis,
@@ -657,6 +737,66 @@ router.post('/fix-all-products-analysis', async (req, res) => {
   } catch (error) {
     console.error('Error fixing all products analysis:', error);
     res.status(500).json({ error: 'Failed to fix all products analysis', details: error.message });
+  }
+});
+
+// Endpoint to get product image by formatted name
+router.get('/images/:formattedName', async (req, res) => {
+  try {
+    const { formattedName } = req.params;
+    
+    if (!formattedName) {
+      return res.status(400).json({ error: 'Formatted image name is required' });
+    }
+    
+    // Determine image type from the formatted name
+    let imageType = 'productimage';
+    if (formattedName.includes('_ingredientsimage')) {
+      imageType = 'ingredientsimage';
+    } else if (formattedName.includes('_nutrientsimage')) {
+      imageType = 'nutrientsimage';
+    }
+    
+    // Find the product with the corresponding formatted image name
+    let query = {};
+    if (imageType === 'productimage') {
+      query.formattedProductImageName = formattedName;
+    } else if (imageType === 'ingredientsimage') {
+      query.formattedIngredientsImageName = formattedName;
+    } else if (imageType === 'nutrientsimage') {
+      query.formattedNutrientsImageName = formattedName;
+    }
+    
+    const product = await Product.findOne(query);
+    
+    if (!product) {
+      return res.status(404).json({ error: 'Product with the specified image name not found' });
+    }
+    
+    // Get the correct image path based on the image type
+    let imagePath;
+    if (imageType === 'productimage') {
+      imagePath = product.productPhotoPath;
+    } else if (imageType === 'ingredientsimage') {
+      imagePath = product.ingredientsImagePath;
+    } else if (imageType === 'nutrientsimage') {
+      imagePath = product.nutritionalContentImagePath;
+    }
+    
+    if (!imagePath) {
+      return res.status(404).json({ error: 'Image path not found for this product' });
+    }
+    
+    // Send the file path
+    const absolutePath = path.resolve(__dirname, '..', imagePath);
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({ error: 'Image file not found' });
+    }
+    
+    res.sendFile(absolutePath);
+  } catch (error) {
+    console.error('Error fetching image by formatted name:', error);
+    res.status(500).json({ error: 'Failed to fetch image' });
   }
 });
 
