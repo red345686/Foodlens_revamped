@@ -208,10 +208,10 @@ const Products = () => {
         console.log('Analysis successful - product data:', response.data.product);
         
         // If we have a product ID, navigate to the product detail page
-        if (response.data.product && response.data.product.id) {
+        if (response.data.product && response.data.product._id) {
           // Navigate to the product detail page after a short delay
           setTimeout(() => {
-            window.location.href = `/product/${response.data.product.id}`;
+            window.location.href = `/product/${response.data.product._id}`;
           }, 1500);
         } else {
           // Refresh the product list if no ID is returned
@@ -450,13 +450,13 @@ const Products = () => {
           }
         });
 
-        if (response.data.status === 'success' && response.data.product && response.data.product.id) {
+        if (response.data.status === 'success' && response.data.product && response.data.product._id) {
           setProcessingStatus('Ingredients analyzed successfully!');
           console.log('Analysis successful:', response.data);
           
           // Navigate to the product detail page after a short delay
           setTimeout(() => {
-            window.location.href = `/product/${response.data.product.id}`;
+            window.location.href = `/product/${response.data.product._id}`;
           }, 1500);
         } else {
           throw new Error(response.data.error || 'Invalid response from server');
@@ -483,13 +483,13 @@ const Products = () => {
           }
         });
 
-        if (response.data.status === 'success' && response.data.product && response.data.product.id) {
+        if (response.data.status === 'success' && response.data.product && response.data.product._id) {
           setProcessingStatus('Ingredients analyzed successfully!');
           console.log('Analysis successful:', response.data);
           
           // Navigate to the product detail page after a short delay
           setTimeout(() => {
-            window.location.href = `/product/${response.data.product.id}`;
+            window.location.href = `/product/${response.data.product._id}`;
           }, 1500);
         } else {
           throw new Error(response.data.error || 'Invalid response from server');
@@ -782,8 +782,8 @@ const Products = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <Link 
-                to={`/product/${product.id}`} 
-                key={product.id}
+                to={`/product/${product._id}`} 
+                key={product._id}
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition transform hover:-translate-y-1 duration-200"
               >
                 <div className="h-48 bg-gray-100 relative overflow-hidden">
