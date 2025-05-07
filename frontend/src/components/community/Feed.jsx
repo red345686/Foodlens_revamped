@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { FaInfoCircle } from 'react-icons/fa';
 
 // API base URL for images
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'http://localhost:5000';
 
 // Separate the loading UI to prevent re-renders
 const LoadingUI = () => (

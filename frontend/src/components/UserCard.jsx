@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCommunity } from '../context/CommunityContext';
+import BadgeIcon from './BadgeIcon';
+import { userAPI } from '../services/api';
 import {
   Card,
   CardContent,
@@ -16,6 +18,29 @@ const UserCard = ({ user, onMessageClick }) => {
     currentUser?.following?.includes(user?._id)
   );
   const [loading, setLoading] = useState(false);
+  const [userBadges, setUserBadges] = useState([]);
+  const [loadingBadges, setLoadingBadges] = useState(false);
+
+  useEffect(() => {
+    const fetchUserBadges = async () => {
+      if (!user?._id) return;
+      
+      try {
+        setLoadingBadges(true);
+        const response = await userAPI.getUserBadges(user._id);
+        // Only get displayed badges
+        const displayedBadges = response.data.filter(badge => badge.displayed);
+        // Limit to max 3 badges to display
+        setUserBadges(displayedBadges.slice(0, 3));
+      } catch (error) {
+        console.error('Error fetching user badges:', error);
+      } finally {
+        setLoadingBadges(false);
+      }
+    };
+    
+    fetchUserBadges();
+  }, [user?._id]);
 
   const handleFollowToggle = async () => {
     setLoading(true);
@@ -62,9 +87,30 @@ const UserCard = ({ user, onMessageClick }) => {
           <Typography variant="subtitle1" fontWeight="bold">
             {user.username}
           </Typography>
+          
           <Typography variant="body2" color="text.secondary" noWrap>
             {user.bio || 'No bio available'}
           </Typography>
+          
+          {/* User badges */}
+          {userBadges.length > 0 && (
+            <Box sx={{ display: 'flex', mt: 1, gap: 1 }}>
+              {userBadges.map((badgeItem) => (
+                <div key={badgeItem.badge._id} style={{ width: 24, height: 24 }}>
+                  <BadgeIcon
+                    badge={badgeItem.badge}
+                    size="sm"
+                    showTooltip={true}
+                  />
+                </div>
+              ))}
+              {userBadges.length > 0 && (
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                  {userBadges.length} badge{userBadges.length !== 1 ? 's' : ''}
+                </Typography>
+              )}
+            </Box>
+          )}
         </Box>
         
         <Box>

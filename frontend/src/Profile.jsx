@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import NavBar from './components/NavBar';
 import { initializeUserProfile, updateProfileSection, getUserProfile } from './services/firestore';
+import UserBadges from './components/UserBadges';
 
 const Profile = () => {
     const { user } = useAuth();
@@ -608,65 +609,147 @@ const Profile = () => {
                         </button>
                     </div>
                 </div>
+            ),
+            badges: (
+                <div className="bg-white rounded-lg shadow-md p-6 min-h-[400px]">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold">Badges & Achievements</h2>
+                    </div>
+                    {user ? (
+                        <UserBadges 
+                            userId={user.uid} 
+                            isOwnProfile={true}
+                        />
+                    ) : (
+                        <div className="flex items-center justify-center h-64 text-gray-500">
+                            Please log in to view your badges.
+                        </div>
+                    )}
+                </div>
             )
         };
 
-        return sections[activeSection];
+        return sections[activeSection] || null;
     };
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <NavBar page="profile" />
-
-            {/* Top Section */}
-            <div className="pt-24 pb-8 bg-gradient-to-r from-[#294c25] to-[#1a3317] text-white">
-                <div className="container mx-auto px-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                            <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center">
-                                <span className="text-4xl text-[#294c25]">👤</span>
+            <NavBar activePage="profile" />
+            
+            <div className="container mx-auto p-4 pb-16 max-w-6xl pt-20">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="w-full md:w-1/4">
+                        <div className="bg-white rounded-lg shadow-md p-4 sticky top-24">
+                            <div className="flex flex-col items-center mb-6">
+                                <div className="w-24 h-24 rounded-full bg-gray-300 mb-4 overflow-hidden">
+                                    {user?.photoURL ? (
+                                        <img 
+                                            src={user.photoURL} 
+                                            alt="Profile" 
+                                            className="w-full h-full object-cover" 
+                                        />
+                                    ) : (
+                                        <div className="flex items-center justify-center w-full h-full text-3xl text-gray-600">
+                                            {user?.displayName?.charAt(0) || user?.email?.charAt(0) || '?'}
+                                        </div>
+                                    )}
+                                </div>
+                                <h2 className="text-xl font-semibold">{user?.displayName || 'Guest User'}</h2>
+                                <p className="text-gray-600 text-sm">{user?.email || 'Not logged in'}</p>
                             </div>
-                            <div>
-                                <h1 className="text-2xl font-bold">{user?.displayName || 'Welcome!'}</h1>
-                                <p className="text-gray-200">Complete your profile to get personalized recommendations</p>
-                            </div>
-                        </div>
-                        <div className="w-64 bg-white bg-opacity-20 rounded-full h-2">
-                            <div className="w-3/4 h-full bg-white rounded-full"></div>
+                            
+                            <nav>
+                                <ul className="space-y-2">
+                                    <li>
+                                        <button
+                                            onClick={() => {
+                                                setActiveSection('basic');
+                                                setIsEditing(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2 rounded-lg ${
+                                                activeSection === 'basic' 
+                                                    ? 'bg-[#294c25] text-white' 
+                                                    : 'hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            Basic Information
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button
+                                            onClick={() => {
+                                                setActiveSection('goals');
+                                                setIsEditing(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2 rounded-lg ${
+                                                activeSection === 'goals' 
+                                                    ? 'bg-[#294c25] text-white' 
+                                                    : 'hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            Goals & Preferences
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button
+                                            onClick={() => {
+                                                setActiveSection('lifestyle');
+                                                setIsEditing(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2 rounded-lg ${
+                                                activeSection === 'lifestyle' 
+                                                    ? 'bg-[#294c25] text-white' 
+                                                    : 'hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            Lifestyle
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button
+                                            onClick={() => {
+                                                setActiveSection('health');
+                                                setIsEditing(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2 rounded-lg ${
+                                                activeSection === 'health' 
+                                                    ? 'bg-[#294c25] text-white' 
+                                                    : 'hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            Health History
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button
+                                            onClick={() => {
+                                                setActiveSection('badges');
+                                                setIsEditing(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2 rounded-lg ${
+                                                activeSection === 'badges' 
+                                                    ? 'bg-[#294c25] text-white' 
+                                                    : 'hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            Badges & Achievements
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="container mx-auto px-4 py-8">
-                {/* Navigation Tabs */}
-                <div className="flex space-x-4 mb-8 overflow-x-auto">
-                    {['basic', 'goals', 'lifestyle', 'health', 'insights'].map((section) => (
-                        <button
-                            key={section}
-                            onClick={() => {
-                                setActiveSection(section);
-                                setIsEditing(false);
-                            }}
-                            className={`px-4 py-2 rounded-lg whitespace-nowrap ${activeSection === section
-                                ? 'bg-[#294c25] text-white'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                        >
-                            {section.charAt(0).toUpperCase() + section.slice(1)}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Section Content */}
-                {isLoading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#294c25]"></div>
+                    
+                    <div className="w-full md:w-3/4">
+                        {isLoading ? (
+                            <div className="flex justify-center items-center h-64">
+                                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#294c25]"></div>
+                            </div>
+                        ) : (
+                            renderSectionContent()
+                        )}
                     </div>
-                ) : (
-                    renderSectionContent()
-                )}
+                </div>
             </div>
         </div>
     );

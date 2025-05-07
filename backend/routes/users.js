@@ -1,7 +1,13 @@
 import express from 'express';
 import User from '../models/User.js';
+import Badge from '../models/Badge.js';
 // Import Firebase admin for verification
 import admin from 'firebase-admin';
+import { 
+  checkAndAwardBadges, 
+  incrementUserStat, 
+  updateBadgeVisibility 
+} from '../badgeService.js';
 
 const router = express.Router();
 
@@ -81,6 +87,9 @@ router.post('/login', async (req, res) => {
     if (firebaseId) {
       const user = await User.findById(firebaseId);
       if (user) {
+        // Increment login count
+        await incrementUserStat(user._id, 'loginCount');
+        
         return res.status(200).json({
           _id: user._id,
           username: user.username,
@@ -89,6 +98,7 @@ router.post('/login', async (req, res) => {
           bio: user.bio,
           followers: user.followers,
           following: user.following,
+          badges: user.badges
         });
       }
       
@@ -110,6 +120,7 @@ router.post('/login', async (req, res) => {
         bio: newUser.bio,
         followers: newUser.followers,
         following: newUser.following,
+        badges: newUser.badges
       });
     }
     
@@ -125,6 +136,9 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
+    // Increment login count
+    await incrementUserStat(user._id, 'loginCount');
+    
     res.status(200).json({
       _id: user._id,
       username: user.username,
@@ -133,6 +147,7 @@ router.post('/login', async (req, res) => {
       bio: user.bio,
       followers: user.followers,
       following: user.following,
+      badges: user.badges
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -205,6 +220,10 @@ router.post('/:id/follow', async (req, res) => {
       $push: { followers: currentUser._id }
     });
     
+    // Check for badges when someone gets a new follower
+    // This might trigger badges like "First Follower", "Rising Star", etc.
+    await checkAndAwardBadges(userToFollow._id);
+    
     res.status(200).json({ message: 'User followed successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -268,6 +287,72 @@ router.get('/default/user', async (req, res) => {
       profilePicture: defaultUser.profilePicture,
       bio: defaultUser.bio,
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user's badges
+router.get('/:id/badges', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('badges')
+      .populate('badges.badge');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.status(200).json(user.badges);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update badge display status
+router.put('/:id/badges/:badgeId', async (req, res) => {
+  try {
+    const { displayed } = req.body;
+    
+    if (typeof displayed !== 'boolean') {
+      return res.status(400).json({ error: 'Invalid display value' });
+    }
+    
+    const success = await updateBadgeVisibility(req.params.id, req.params.badgeId, displayed);
+    
+    if (!success) {
+      return res.status(404).json({ error: 'User or badge not found' });
+    }
+    
+    res.status(200).json({ message: 'Badge visibility updated' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Manually check for new badges (can be triggered from profile page)
+router.post('/:id/check-badges', async (req, res) => {
+  try {
+    const newBadges = await checkAndAwardBadges(req.params.id);
+    
+    if (newBadges === null) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.status(200).json({ 
+      newBadges,
+      message: newBadges.length > 0 ? `Congratulations! You earned ${newBadges.length} new badge(s)` : 'No new badges earned'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all available badges (for badge showcase page)
+router.get('/badges/all', async (req, res) => {
+  try {
+    const badges = await Badge.find({}).sort({ type: 1, requirement: 1 });
+    res.status(200).json(badges);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

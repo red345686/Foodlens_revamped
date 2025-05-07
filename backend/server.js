@@ -13,6 +13,7 @@ import productRoutes from './routes/products.js';
 import extractBarcodeFromImage from './barcode.js'; // Your Gemini OCR logic
 import { fetchProductByBarcode, fetchProductsByCategory, searchProductsByName } from './foodapi.js';
 import admin from 'firebase-admin';
+import { initializeDefaultBadges } from './badgeService.js'; // Import badge service
 
 dotenv.config();
 
@@ -70,6 +71,13 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Connect to MongoDB
 initDatabase().then(() => {
   console.log('Database initialized successfully');
+  
+  // Initialize badge system
+  initializeDefaultBadges().then(() => {
+    console.log('Badge system initialized successfully');
+  }).catch(err => {
+    console.error('Failed to initialize badge system', err);
+  });
 }).catch(err => {
   console.error('Failed to initialize database', err);
 });

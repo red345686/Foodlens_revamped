@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Define the API base URL with configurable port
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://localhost:5000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -29,6 +29,12 @@ export const userAPI = {
   updateProfile: (userId, userData) => api.put(`/users/${userId}`, userData),
   followUser: (userId, currentUserId) => api.post(`/users/${userId}/follow`, { userId: currentUserId }),
   unfollowUser: (userId, currentUserId) => api.post(`/users/${userId}/unfollow`, { userId: currentUserId }),
+  // Badge endpoints
+  getUserBadges: (userId) => api.get(`/users/${userId}/badges`),
+  updateBadgeVisibility: (userId, badgeId, displayed) => 
+    api.put(`/users/${userId}/badges/${badgeId}`, { displayed }),
+  checkForNewBadges: (userId) => api.post(`/users/${userId}/check-badges`),
+  getAllBadges: () => api.get('/users/badges/all'),
   getDefaultUser: () => {
     const token = localStorage.getItem('firebaseToken');
     if (!token) {

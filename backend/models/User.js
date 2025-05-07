@@ -26,6 +26,19 @@ const userSchema = new mongoose.Schema({
     },
     blockedUsers: [{ type: String, ref: 'User' }]
   },
+  badges: [{
+    badge: { type: mongoose.Schema.Types.ObjectId, ref: 'Badge' },
+    earnedAt: { type: Date, default: Date.now },
+    displayed: { type: Boolean, default: true }
+  }],
+  stats: {
+    postCount: { type: Number, default: 0 },
+    commentCount: { type: Number, default: 0 },
+    likesGiven: { type: Number, default: 0 },
+    likesReceived: { type: Number, default: 0 },
+    loginCount: { type: Number, default: 1 },
+    lastBadgeCheck: { type: Date, default: Date.now }
+  },
   isActive: { type: Boolean, default: true },
   lastSeen: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now }

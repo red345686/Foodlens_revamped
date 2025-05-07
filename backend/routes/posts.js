@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import Post from '../models/Post.js';
 import User from '../models/User.js';
 import mongoose from 'mongoose';
+import { incrementUserStat } from '../badgeService.js'; // Import badge service
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -95,6 +96,9 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     await User.findByIdAndUpdate(userId, {
       $push: { posts: newPost._id }
     });
+    
+    // Increment post count for badges
+    await incrementUserStat(userId, 'postCount');
     
     // Populate user info
     const populatedPost = await Post.findById(newPost._id)
@@ -298,32 +302,36 @@ router.post('/:id/like', async (req, res) => {
     const post = await Post.findById(req.params.id);
     const userId = req.body.userId;
     
-    if (!post || post.isArchived) {
+    if (!post) {
       return res.status(404).json({ error: 'Post not found' });
     }
     
-    // Check if user already liked the post
     if (post.likes.includes(userId)) {
       return res.status(400).json({ error: 'Post already liked' });
     }
     
-    // Add user to likes array
     await Post.findByIdAndUpdate(req.params.id, {
       $push: { likes: userId }
     });
     
-    // Add notification to post owner if it's not the same user
+    // Add notification for post owner
     if (post.user.toString() !== userId) {
       await User.findByIdAndUpdate(post.user, {
         $push: {
           notifications: {
             type: 'like',
             user: userId,
-            post: post._id
+            post: post._id,
           }
         }
       });
+      
+      // Increment likes received for post owner
+      await incrementUserStat(post.user, 'likesReceived');
     }
+    
+    // Increment likes given for the user who liked
+    await incrementUserStat(userId, 'likesGiven');
     
     res.status(200).json({ message: 'Post liked successfully' });
   } catch (error) {
@@ -363,66 +371,40 @@ router.post('/:id/comment', async (req, res) => {
     const { userId, text } = req.body;
     
     const post = await Post.findById(req.params.id);
-    if (!post || post.isArchived) {
-      return res.status(404).json({ error: 'Post not found' });
-    }
     
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
     }
     
     const comment = {
       user: userId,
       text,
-      _id: new mongoose.Types.ObjectId(), // Generate a proper ObjectId for the comment
-      createdAt: new Date()
+      timestamp: new Date()
     };
     
-    // Add comment to post
-    const updatedPost = await Post.findByIdAndUpdate(
-      req.params.id,
-      { $push: { comments: comment } },
-      { new: true }
-    )
-      .populate({
-        path: 'user',
-        select: 'username profilePicture',
-      })
-      .populate({
-        path: 'comments.user',
-        select: 'username profilePicture',
-      });
+    await Post.findByIdAndUpdate(req.params.id, {
+      $push: { comments: comment }
+    });
     
-    // Make sure all comment user data is valid
-    if (updatedPost.comments) {
-      updatedPost.comments = updatedPost.comments.map(comment => {
-        if (!comment.user) {
-          return {
-            ...comment.toObject(),
-            user: {
-              _id: userId,
-              username: 'Unknown User',
-              profilePicture: 'https://via.placeholder.com/150'
-            }
-          };
-        }
-        return comment;
-      });
-    }
-    
-    // Add notification to post owner if it's not the same user
+    // Add notification for post owner
     if (post.user.toString() !== userId) {
       await User.findByIdAndUpdate(post.user, {
         $push: {
           notifications: {
             type: 'comment',
             user: userId,
-            post: post._id
+            post: post._id,
           }
         }
       });
     }
+    
+    // Increment comment count for badges
+    await incrementUserStat(userId, 'commentCount');
+    
+    // Get updated post with populated comment
+    const updatedPost = await Post.findById(req.params.id)
+      .populate('comments.user', 'username profilePicture');
     
     res.status(200).json(updatedPost);
   } catch (error) {
