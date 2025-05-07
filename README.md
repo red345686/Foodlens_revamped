@@ -11,6 +11,10 @@ A social media community platform for food enthusiasts to share posts, like, com
 - **Real-time Chat**: Message users you follow or who follow you
 - **Feed**: View posts from all users in a chronological feed
 - **Responsive Design**: Works on mobile and desktop devices
+- **Ingredient Analysis**: Analyze food product ingredients for safety using OCR and AI
+  - Extract ingredients from images using OCR
+  - Analyze ingredients for potential health concerns
+  - Manual ingredient entry option
 
 ## Technologies Used
 
@@ -21,6 +25,8 @@ A social media community platform for food enthusiasts to share posts, like, com
 - MongoDB (with Mongoose)
 - Socket.io (for real-time messaging)
 - Multer (for file uploads)
+- Google Gemini API (for AI ingredient analysis)
+- Python OCR with Tesseract (for ingredient text extraction)
 
 ### Frontend
 
@@ -37,6 +43,8 @@ A social media community platform for food enthusiasts to share posts, like, com
 
 - Node.js (v14+ recommended)
 - MongoDB installed locally or MongoDB Atlas account
+- Python 3.6+ (for OCR functionality)
+- Tesseract OCR (for OCR functionality)
 
 ### Environment Setup
 
@@ -45,6 +53,7 @@ A social media community platform for food enthusiasts to share posts, like, com
 ```
 DATABASE_URI=mongodb://localhost:27017/foodlens
 PORT=3000
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 ### Installation
@@ -63,7 +72,19 @@ cd backend
 npm install
 ```
 
-3. Install frontend dependencies:
+3. Install Python OCR dependencies:
+
+```
+cd backend
+npm run install-python-deps
+```
+
+4. Install Tesseract OCR:
+
+   - Windows: Download from [UB-Mannheim](https://github.com/UB-Mannheim/tesseract/wiki)
+   - Add to PATH or update path in `backend/ocr_script.py`
+
+5. Install frontend dependencies:
 
 ```
 cd ../frontend
@@ -105,24 +126,50 @@ http://localhost:5173/
 - Email: default@foodlens.com
 - Password: password123
 
+## OCR and Ingredient Analysis
+
+FoodLens uses a dual OCR approach for processing ingredient images:
+
+1. **Python-based OCR** (Primary method)
+
+   - Uses `pytesseract` (Python wrapper for Tesseract OCR)
+   - Includes image preprocessing for better text recognition
+
+2. **Gemini OCR** (Fallback method)
+   - Uses Google's Gemini API Vision capabilities
+   - Used automatically if Python OCR fails
+
+### Testing OCR
+
+```
+cd backend
+npm run test-ocr
+```
+
+For more information about the OCR implementation, see [backend/README_OCR.md](backend/README_OCR.md).
+
 ## Project Structure
 
 ```
 foodlens/
 ├── backend/
-│   ├── models/         # Database models
-│   ├── routes/         # API endpoints
-│   ├── uploads/        # User uploaded files
-│   ├── database.js     # Database connection
-│   ├── server.js       # Express server
-│   └── seed.js         # Database seeding script
+│   ├── models/           # Database models
+│   ├── routes/           # API endpoints
+│   ├── uploads/          # User uploaded files
+│   ├── database.js       # Database connection
+│   ├── server.js         # Express server
+│   ├── seed.js           # Database seeding script
+│   ├── geminiService.js  # Gemini API service
+│   ├── pythonOcrService.js # Python OCR service
+│   ├── geminiOcrService.js # Gemini OCR service
+│   └── ocr_script.py     # Python OCR script (auto-generated)
 └── frontend/
-    ├── public/         # Static files
+    ├── public/           # Static files
     ├── src/
-    │   ├── components/ # React components
-    │   ├── context/    # Context providers
-    │   ├── services/   # API service functions
-    │   └── ...         # Other React components and pages
+    │   ├── components/   # React components
+    │   ├── context/      # Context providers
+    │   ├── services/     # API service functions
+    │   └── ...           # Other React components and pages
 ```
 
 ## API Endpoints
