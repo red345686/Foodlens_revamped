@@ -1,4 +1,4 @@
-import React, { useState, useContext, useCallback, memo, useRef, useEffect } from 'react';
+import React, { useState, useContext, useCallback, memo, useRef, useEffect, useMemo } from 'react';
 import { UserContext } from '../../context/UserContext';
 import { postAPI } from '../../services/api';
 import { FaImage, FaMapMarkerAlt, FaTimes } from 'react-icons/fa';
@@ -204,25 +204,36 @@ const PostPrompt = memo(({ currentUser, onClick }) => {
   const displayName = currentUser?.displayName || currentUser?.username || currentUser?.email?.split('@')[0] || 'User';
   const profilePic = currentUser?.profilePicture || currentUser?.photoURL || DEFAULT_AVATAR;
   
+  // We create a memoized version of the avatar to prevent re-rendering
+  const avatar = useMemo(() => (
+    <img 
+      src={profilePic}
+      alt={displayName} 
+      className="w-10 h-10 rounded-full object-cover"
+      onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = DEFAULT_AVATAR;
+      }}
+    />
+  ), [profilePic, displayName]);
+  
   return (
     <div className="flex items-start space-x-3 cursor-pointer" onClick={onClick}>
-      <img 
-        src={profilePic}
-        alt={displayName} 
-        className="w-10 h-10 rounded-full object-cover"
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = DEFAULT_AVATAR;
-        }}
-      />
+      {avatar}
       <div className="bg-gray-100 rounded-full py-2 px-4 text-gray-500 flex-1">
         What's on your mind, {displayName}?
       </div>
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Only re-render if currentUser changes
-  return prevProps.currentUser?._id === nextProps.currentUser?._id;
+  // Only re-render if currentUser ID, profilePicture or displayName changes
+  return (
+    prevProps.currentUser?._id === nextProps.currentUser?._id &&
+    prevProps.currentUser?.profilePicture === nextProps.currentUser?.profilePicture &&
+    prevProps.currentUser?.photoURL === nextProps.currentUser?.photoURL &&
+    (prevProps.currentUser?.displayName || prevProps.currentUser?.username) === 
+    (nextProps.currentUser?.displayName || nextProps.currentUser?.username)
+  );
 });
 
 // Memoize the CreatePost component

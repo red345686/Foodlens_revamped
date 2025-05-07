@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { UserProvider, UserContext } from './context/UserContext';
 import { useAuth } from './AuthContext';
@@ -89,8 +89,8 @@ const Community = () => {
     }
   }, [location.pathname, navigate]);
 
-  // Memoize this component to prevent re-renders
-  const CommunityContent = memo(() => {
+  // Memoize the entire UserContext consumer components to prevent re-renders
+  const CommunityContent = useMemo(() => {
     // Protected route component that uses UserContext
     const ProtectedRoute = ({ children }) => {
       return (
@@ -181,11 +181,11 @@ const Community = () => {
         </main>
       </div>
     );
-  });
+  }, [location, handleProfileClick]); // Add proper dependencies
 
   return (
     <UserProvider>
-      <CommunityContent />
+      {CommunityContent}
     </UserProvider>
   );
 };

@@ -1,6 +1,6 @@
 import { CgProfile } from "react-icons/cg";
 import { FaSignOutAlt } from "react-icons/fa";
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { motion, AnimatePresence } from 'framer-motion';
@@ -113,6 +113,56 @@ function NavBar({ page }) {
     }
   };
 
+  // Memoize the profile button to prevent flickering
+  const profileButton = useMemo(() => {
+    if (!user) return null;
+    
+    return (
+      <motion.div 
+        className="relative flex items-center justify-center"
+        variants={linkVariants}
+      >
+        <motion.button
+          onClick={toggleProfile}
+          className="flex items-center justify-center text-white hover:text-gray-200"
+          whileHover={buttonHover}
+          whileTap={buttonTap}
+        >
+          <CgProfile className="w-10 h-10" />
+        </motion.button>
+        <AnimatePresence>
+          {isProfileOpen && (
+            <motion.div 
+              className="absolute right-0 top-12 w-48 bg-white rounded-md shadow-lg py-1 z-50"
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={dropdownVariants}
+            >
+              <motion.div whileHover={{ backgroundColor: "#f3f4f6" }}>
+                <Link
+                  to="/Profile"
+                  className="block px-4 py-2 text-sm text-gray-700"
+                  onClick={() => setIsProfileOpen(false)}
+                >
+                  My Profile
+                </Link>
+              </motion.div>
+              <motion.div whileHover={{ backgroundColor: "#f3f4f6" }}>
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700"
+                >
+                  Sign Out
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    );
+  }, [user, isProfileOpen, toggleProfile, handleLogout, buttonHover, buttonTap, linkVariants, dropdownVariants]);
+
   return (
     <motion.header 
       className={`w-full ${page === 'home' ? 'bg-transparent' : 'bg-[#294c25]'} backdrop-filter fixed top-0 z-50 ${page === 'home' ? 'backdrop-blur' : ''}`}
@@ -160,50 +210,7 @@ function NavBar({ page }) {
                 </Link>
               </motion.div>
             ))}
-            {user && (
-              <motion.div 
-                className="relative flex items-center justify-center"
-                variants={linkVariants}
-              >
-                <motion.button
-                  onClick={toggleProfile}
-                  className="flex items-center justify-center text-white hover:text-gray-200"
-                  whileHover={buttonHover}
-                  whileTap={buttonTap}
-                >
-                  <CgProfile className="w-10 h-10" />
-                </motion.button>
-                <AnimatePresence>
-                  {isProfileOpen && (
-                    <motion.div 
-                      className="absolute right-0 top-12 w-48 bg-white rounded-md shadow-lg py-1 z-50"
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      variants={dropdownVariants}
-                    >
-                      <motion.div whileHover={{ backgroundColor: "#f3f4f6" }}>
-                        <Link
-                          to="/Profile"
-                          className="block px-4 py-2 text-sm text-gray-700"
-                          onClick={() => setIsProfileOpen(false)}
-                        >
-                          My Profile
-                        </Link>
-                      </motion.div>
-                      <motion.div whileHover={{ backgroundColor: "#f3f4f6" }}>
-                        <button
-                          onClick={handleLogout}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700"
-                        >
-                          Sign Out
-                        </button>
-                      </motion.div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            )}
+            {profileButton}
           </div>
 
           {/* Mobile Menu Button */}
@@ -298,4 +305,4 @@ function NavBar({ page }) {
   );
 }
 
-export default NavBar;
+export default React.memo(NavBar);

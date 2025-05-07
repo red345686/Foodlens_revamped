@@ -116,15 +116,6 @@ const Home = () => {
             whileHover="hover"
             whileTap="tap"
           >
-            <Link to='/analyze-ingredients'>ANALYZE INGREDIENTS</Link>
-          </motion.div>
-          
-          <motion.div 
-            className='sm:w-auto text-center text-lg sm:text-xl md:text-2xl my-2 lg:text-3xl text-white px-3 md:px-5 lg:px-8 py-2 md:py-3 lg:py-4 bg-red-600 rounded-2xl lg:rounded-3xl'
-            variants={buttonVariants}
-            whileHover="hover"
-            whileTap="tap"
-          >
             <Link to='/explore'>EXPLORE</Link>
           </motion.div>
         </motion.div>
