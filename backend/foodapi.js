@@ -6,7 +6,7 @@ const api_uri = process.env.API_URL;
 // Fetch product details by barcode
 export async function fetchProductByBarcode(barcode) {
     try {
-        const res = await fetch(`${api_uri}/api/v2/product/${barcode}.json`);
+        const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${barcode}.json`);
         if (!res.ok) throw new Error(res.statusText);
         const data = await res.json();
         console.log("Product Details:", data);
@@ -47,7 +47,7 @@ export async function fetchProductsByCategory(category) {
 
 // Fetch a random product
 export async function fetchRandomProduct() {
-   
+
     try {
         const res = await fetch(`${api_uri}/cgi/search.pl?action=process&sort_by=random&page_size=20&json=true`);
         if (!res.ok) throw new Error(res.statusText);
