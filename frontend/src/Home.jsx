@@ -116,7 +116,7 @@ const Home = () => {
             whileHover="hover"
             whileTap="tap"
           >
-            <Link to='/explore'>EXPLORE</Link>
+            <Link to='/products'>EXPLORE</Link>
           </motion.div>
         </motion.div>
       </motion.div>
