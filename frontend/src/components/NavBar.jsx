@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { motion, AnimatePresence } from 'framer-motion';
 import { buttonHover, buttonTap } from './animations';
+import logoImage from '../assets/logo.png';
 
 function NavBar({ page }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,10 +38,10 @@ function NavBar({ page }) {
   // Animation variants
   const headerVariants = {
     hidden: { opacity: 0, y: -20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { 
+      transition: {
         duration: 0.5,
         when: "beforeChildren",
         staggerChildren: 0.1
@@ -50,10 +51,10 @@ function NavBar({ page }) {
 
   const logoVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       x: 0,
-      transition: { 
+      transition: {
         type: "spring",
         stiffness: 100
       }
@@ -62,10 +63,10 @@ function NavBar({ page }) {
 
   const linkVariants = {
     hidden: { opacity: 0, y: -10 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { 
+      transition: {
         type: "spring",
         stiffness: 120
       }
@@ -74,10 +75,10 @@ function NavBar({ page }) {
 
   const mobileMenuVariants = {
     hidden: { opacity: 0, height: 0 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       height: "auto",
-      transition: { 
+      transition: {
         duration: 0.3,
         when: "beforeChildren",
         staggerChildren: 0.05
@@ -86,7 +87,7 @@ function NavBar({ page }) {
     exit: {
       opacity: 0,
       height: 0,
-      transition: { 
+      transition: {
         duration: 0.3,
         when: "afterChildren"
       }
@@ -95,19 +96,19 @@ function NavBar({ page }) {
 
   const dropdownVariants = {
     hidden: { opacity: 0, y: -5, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
+    visible: {
+      opacity: 1,
+      y: 0,
       scale: 1,
-      transition: { 
+      transition: {
         duration: 0.2,
         type: "spring",
         stiffness: 300
       }
     },
-    exit: { 
-      opacity: 0, 
-      y: -5, 
+    exit: {
+      opacity: 0,
+      y: -5,
       scale: 0.95,
       transition: { duration: 0.15 }
     }
@@ -116,9 +117,9 @@ function NavBar({ page }) {
   // Memoize the profile button to prevent flickering
   const profileButton = useMemo(() => {
     if (!user) return null;
-    
+
     return (
-      <motion.div 
+      <motion.div
         className="relative flex items-center justify-center"
         variants={linkVariants}
       >
@@ -132,7 +133,7 @@ function NavBar({ page }) {
         </motion.button>
         <AnimatePresence>
           {isProfileOpen && (
-            <motion.div 
+            <motion.div
               className="absolute right-0 top-12 w-48 bg-white rounded-md shadow-lg py-1 z-50"
               initial="hidden"
               animate="visible"
@@ -164,7 +165,7 @@ function NavBar({ page }) {
   }, [user, isProfileOpen, toggleProfile, handleLogout, buttonHover, buttonTap, linkVariants, dropdownVariants]);
 
   return (
-    <motion.header 
+    <motion.header
       className={`w-full ${page === 'home' ? 'bg-transparent' : 'bg-[#294c25]'} backdrop-filter fixed top-0 z-50 ${page === 'home' ? 'backdrop-blur' : ''}`}
       initial="hidden"
       animate="visible"
@@ -174,14 +175,14 @@ function NavBar({ page }) {
         <div className={`flex items-center ${page === 'home' ? 'justify-end' : 'justify-between'}`}>
           <motion.div variants={logoVariants}>
             <Link to='/' className={`flex items-center ${page === 'home' ? 'absolute left-6' : ''}`}>
-              <motion.img 
+              <motion.img
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-8 sm:w-10 rounded-lg" 
-                src="logo.png" 
-                alt="FoodLens Logo" 
+                className="w-8 sm:w-10 rounded-lg"
+                src={logoImage}
+                alt="FoodLens Logo"
               />
-              <motion.span 
+              <motion.span
                 className='mx-2 text-xl sm:text-2xl text-white'
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

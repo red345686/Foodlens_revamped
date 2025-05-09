@@ -14,6 +14,7 @@ import extractBarcodeFromImage from './barcode.js'; // Your Gemini OCR logic
 import { fetchProductByBarcode, fetchProductsByCategory, searchProductsByName } from './foodapi.js';
 import admin from 'firebase-admin';
 import { initializeDefaultBadges } from './badgeService.js'; // Import badge service
+import { analyzeManualIngredients } from './geminiService.js';
 
 dotenv.config();
 
@@ -34,7 +35,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const upload = multer({ 
+const upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
       // Use absolute path with __dirname to ensure consistency
@@ -71,7 +72,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Connect to MongoDB
 initDatabase().then(() => {
   console.log('Database initialized successfully');
-  
+
   // Initialize badge system
   initializeDefaultBadges().then(() => {
     console.log('Badge system initialized successfully');
@@ -153,12 +154,96 @@ app.get('/product/bybarcode/:barcode', async (req, res) => {
     if (!productDetails) {
       return res.status(404).json({ error: 'Product not found' });
     }
-    res.json(productDetails);
+
+    // Extract ingredients with better handling of different formats
+    let ingredientsText = '';
+
+    if (productDetails.product) {
+      // Try multiple possible locations/formats of ingredients data
+      if (typeof productDetails.product.ingredients_text === 'string' && productDetails.product.ingredients_text.trim().length > 0) {
+        ingredientsText = productDetails.product.ingredients_text.trim();
+      } else if (productDetails.product.ingredients_text_en && typeof productDetails.product.ingredients_text_en === 'string') {
+        ingredientsText = productDetails.product.ingredients_text_en.trim();
+      } else if (productDetails.product.ingredients && Array.isArray(productDetails.product.ingredients)) {
+        // Handle case where ingredients are in an array format
+        ingredientsText = productDetails.product.ingredients
+          .map(ing => ing.text || ing.id || ing.name || String(ing))
+          .filter(Boolean)
+          .join(', ');
+      }
+    }
+
+    console.log('Extracted ingredients text:', ingredientsText);
+    console.log('Ingredients text type:', typeof ingredientsText);
+    console.log('Ingredients text length:', ingredientsText.length);
+
+    const nutrients = productDetails.product?.nutriments || {};
+
+    // If we have ingredients, analyze them with Gemini
+    let analysis = null;
+    if (ingredientsText && ingredientsText.trim().length > 0) {
+      try {
+        // Sanitize the ingredients text to ensure it's a valid string
+        const sanitizedIngredientsText = String(ingredientsText)
+          .trim()
+          .replace(/\s+/g, ' ')  // Normalize whitespace
+          .replace(/(\d+\.?\d*)\s*%/g, '') // Remove percentages
+          .replace(/\([^)]*\)/g, '')  // Remove content in parentheses
+          .replace(/\s*,\s*/g, ', '); // Standardize commas
+
+        console.log('Sanitized ingredients text:', sanitizedIngredientsText);
+
+        analysis = await analyzeManualIngredients(sanitizedIngredientsText);
+        console.log('Analysis completed successfully');
+      } catch (analysisError) {
+        console.error('Error analyzing ingredients:', analysisError);
+
+        // Create a meaningful fallback analysis with available ingredients
+        const ingredientsList = ingredientsText
+          .split(/,|;/)
+          .map(item => item.trim())
+          .filter(item => item.length > 0);
+
+        analysis = {
+          ingredients: ingredientsList,
+          harmfulIngredients: [],
+          safeIngredients: ingredientsList,
+          unknownIngredients: [],
+          safetyScore: 50,
+          overallSafety: "Ingredients could not be fully analyzed",
+          detailedAnalysis: `The product contains: ${ingredientsList.join(', ')}`,
+          nutritionScore: 50,
+          sustainabilityScore: 50,
+          processingLevel: "processed"
+        };
+      }
+    } else {
+      console.log('No ingredients text found in product data');
+      analysis = {
+        ingredients: [],
+        harmfulIngredients: [],
+        safeIngredients: [],
+        unknownIngredients: [],
+        safetyScore: 50,
+        overallSafety: "No ingredients information available for this product",
+        detailedAnalysis: "Cannot analyze ingredients as none were provided in the product data",
+        nutritionScore: 50,
+        sustainabilityScore: 50,
+        processingLevel: "processed"
+      };
+    }
+
+    // Return the product details along with the analysis
+    res.json({
+      productDetails,
+      analysis
+    });
   } catch (error) {
     console.error('Error fetching product details:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 });
+
 app.get('/product/byname/:prodName', async (req, res) => {
   const { prodName } = req.params;
   try {
