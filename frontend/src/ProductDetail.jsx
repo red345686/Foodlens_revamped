@@ -9,15 +9,15 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 // Helper function to get the correct image URL
 const getImageUrl = (product, imageType = 'product') => {
   if (!product) return null;
-  
+
   // Check if using mock data (which has 'image' property)
   if (product.image) {
     return product.image;
   }
-  
+
   // Get the formatted image name based on image type
   let formattedName;
-  switch(imageType) {
+  switch (imageType) {
     case 'product':
       formattedName = product.formattedProductImageName;
       break;
@@ -30,16 +30,16 @@ const getImageUrl = (product, imageType = 'product') => {
     default:
       formattedName = null;
   }
-  
+
   // If we have a formatted name, use it with our new endpoint
   if (formattedName) {
     return `${API_URL}/api/products/images/${formattedName}`;
   }
-  
+
   // Use the appropriate formatted image name based on image type
   let imagePath;
-  
-  switch(imageType) {
+
+  switch (imageType) {
     case 'product':
       // Use product photo path or default image path
       imagePath = product.productPhotoPath || product.imagePath;
@@ -53,19 +53,19 @@ const getImageUrl = (product, imageType = 'product') => {
     default:
       imagePath = product.imagePath;
   }
-  
+
   // Check if we have an imagePath from the API
   if (imagePath) {
     // If it's already a full URL
     if (imagePath.startsWith('http')) {
       return imagePath;
     }
-    
+
     // If it's a relative path
     const fullPath = `${API_URL}/${imagePath.replace(/\\/g, '/')}`;
     return fullPath;
   }
-  
+
   // Fallback to default image
   return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80';
 };
@@ -85,7 +85,7 @@ const ProductDetail = () => {
         setLoading(true);
         const response = await axios.get(`${API_URL}/api/products/${id}`);
         console.log("Product data received:", response.data);
-        
+
         if (response.data.analysis) {
           console.log("Product analysis data details:", {
             nutritionScore: response.data.analysis.nutritionScore,
@@ -98,7 +98,7 @@ const ProductDetail = () => {
         } else {
           console.log("No analysis data found in the product!");
         }
-        
+
         setProduct(response.data);
         setError(null);
       } catch (err) {
@@ -127,16 +127,16 @@ const ProductDetail = () => {
   // Add function to safely access analysis data
   const getAnalysisValue = (product, field, defaultValue) => {
     if (!product || !product.analysis) return defaultValue;
-    
+
     const value = product.analysis[field];
     if (value === undefined || value === null) return defaultValue;
-    
+
     if (typeof value === 'number') return value;
     if (typeof value === 'string') {
       const parsed = parseFloat(value);
       return isNaN(parsed) ? defaultValue : parsed;
     }
-    
+
     return defaultValue;
   };
 
@@ -165,13 +165,13 @@ const ProductDetail = () => {
     try {
       setFixingAnalysis(true);
       setFixMessage({ type: 'info', text: 'Fixing product analysis...' });
-      
+
       const response = await axios.post(`${API_URL}/api/products/fix-product-analysis/${id}`);
-      
+
       if (response.data.status === 'success') {
         setProduct({ ...product, analysis: response.data.product.analysis });
         setFixMessage({ type: 'success', text: 'Product analysis fixed successfully!' });
-        
+
         // Refresh the product data
         setTimeout(() => {
           window.location.reload();
@@ -218,7 +218,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200">
+    <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200 pt-16">
       <NavBar />
       <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="mb-6">
@@ -242,21 +242,19 @@ const ProductDetail = () => {
             <nav className="-mb-px flex">
               <button
                 onClick={() => setActiveTab('product')}
-                className={`w-1/2 py-4 px-4 text-center font-medium text-sm ${
-                  activeTab === 'product'
+                className={`w-1/2 py-4 px-4 text-center font-medium text-sm ${activeTab === 'product'
                     ? 'border-b-2 border-green-500 text-green-600'
                     : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 Product Analysis
               </button>
               <button
                 onClick={() => setActiveTab('ingredients')}
-                className={`w-1/2 py-4 px-4 text-center font-medium text-sm ${
-                  activeTab === 'ingredients'
+                className={`w-1/2 py-4 px-4 text-center font-medium text-sm ${activeTab === 'ingredients'
                     ? 'border-b-2 border-green-500 text-green-600'
                     : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 Ingredient Analysis
               </button>
@@ -270,7 +268,7 @@ const ProductDetail = () => {
                 {/* Product Image */}
                 <div className="md:col-span-1">
                   <div className="bg-gray-100 p-4 rounded-lg flex items-center justify-center h-full overflow-hidden">
-                    <img 
+                    <img
                       src={getImageUrl(product)}
                       alt={product.name}
                       className="max-w-full h-auto max-h-80 object-contain rounded shadow transition-all duration-300 hover:scale-105"
@@ -289,32 +287,31 @@ const ProductDetail = () => {
                   {product.analysis ? (
                     <div className="bg-gray-50 p-6 rounded-lg">
                       <h2 className="text-2xl font-bold text-gray-800 mb-4">Product Analysis</h2>
-                      
+
                       {/* Check if analysis has actual values */}
                       {(!product.analysis.nutritionScore && !product.analysis.sustainabilityScore) ? (
                         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
                           <p className="text-yellow-700 mb-3">This product has incomplete analysis data.</p>
-                          
-                          <button 
+
+                          <button
                             onClick={fixProductAnalysis}
                             disabled={fixingAnalysis}
                             className={`px-4 py-2 rounded ${fixingAnalysis ? 'bg-gray-400' : 'bg-yellow-500 hover:bg-yellow-600'} text-white`}
                           >
                             {fixingAnalysis ? 'Fixing...' : 'Fix Product Analysis'}
                           </button>
-                          
+
                           {fixMessage && (
-                            <p className={`mt-2 text-sm ${
-                              fixMessage.type === 'success' ? 'text-green-600' :
-                              fixMessage.type === 'error' ? 'text-red-600' :
-                              'text-blue-600'
-                            }`}>
+                            <p className={`mt-2 text-sm ${fixMessage.type === 'success' ? 'text-green-600' :
+                                fixMessage.type === 'error' ? 'text-red-600' :
+                                  'text-blue-600'
+                              }`}>
                               {fixMessage.text}
                             </p>
                           )}
                         </div>
                       ) : null}
-                      
+
                       {/* Nutrition Score */}
                       <div className="mb-6">
                         <div className="flex justify-between mb-1">
@@ -322,8 +319,8 @@ const ProductDetail = () => {
                           <span className="font-bold">{getAnalysisValue(product, 'nutritionScore', 0)}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-4">
-                          <div 
-                            className={`${getScoreColor(getAnalysisValue(product, 'nutritionScore', 0))} h-4 rounded-full`} 
+                          <div
+                            className={`${getScoreColor(getAnalysisValue(product, 'nutritionScore', 0))} h-4 rounded-full`}
                             style={{ width: `${getAnalysisValue(product, 'nutritionScore', 0)}%` }}
                           ></div>
                         </div>
@@ -337,8 +334,8 @@ const ProductDetail = () => {
                           <span className="font-bold">{getAnalysisValue(product, 'sustainabilityScore', 0)}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-4">
-                          <div 
-                            className={`${getScoreColor(getAnalysisValue(product, 'sustainabilityScore', 0))} h-4 rounded-full`} 
+                          <div
+                            className={`${getScoreColor(getAnalysisValue(product, 'sustainabilityScore', 0))} h-4 rounded-full`}
                             style={{ width: `${getAnalysisValue(product, 'sustainabilityScore', 0)}%` }}
                           ></div>
                         </div>
@@ -347,13 +344,12 @@ const ProductDetail = () => {
                       {/* Processing Level */}
                       <div className="mb-6">
                         <h3 className="font-semibold text-gray-700 mb-2">Processing Level</h3>
-                        <span className={`px-3 py-1 rounded-full text-white text-sm font-semibold ${
-                          !product.analysis.processingLevel ? 'bg-gray-500' :
-                          product.analysis.processingLevel === 'minimally processed' ? 'bg-green-500' :
-                          product.analysis.processingLevel === 'processed' ? 'bg-yellow-400' :
-                          product.analysis.processingLevel === 'highly processed' ? 'bg-orange-500' :
-                          'bg-red-500'
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-white text-sm font-semibold ${!product.analysis.processingLevel ? 'bg-gray-500' :
+                            product.analysis.processingLevel === 'minimally processed' ? 'bg-green-500' :
+                              product.analysis.processingLevel === 'processed' ? 'bg-yellow-400' :
+                                product.analysis.processingLevel === 'highly processed' ? 'bg-orange-500' :
+                                  'bg-red-500'
+                          }`}>
                           {product.analysis.processingLevel || 'Unknown'}
                         </span>
                       </div>
@@ -386,7 +382,7 @@ const ProductDetail = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Product Image */}
                       <div className="bg-gray-100 p-4 rounded-lg flex items-center justify-center h-64">
-                        <img 
+                        <img
                           src={getImageUrl(product, 'product')}
                           alt={product.name}
                           className="max-w-full h-auto max-h-64 object-contain rounded shadow"
@@ -398,13 +394,13 @@ const ProductDetail = () => {
                           }}
                         />
                       </div>
-                      
+
                       {/* Ingredients Image */}
                       <div className="bg-gray-100 p-4 rounded-lg">
                         <h3 className="font-semibold text-gray-700 mb-3">Ingredients</h3>
                         {product.ingredientsImagePath ? (
                           <div className="flex items-center justify-center">
-                            <img 
+                            <img
                               src={getImageUrl(product, 'ingredients')}
                               alt="Ingredients"
                               className="max-w-full h-auto max-h-64 object-contain rounded shadow"
@@ -420,7 +416,7 @@ const ProductDetail = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Safety Score */}
                     <div className="bg-gray-50 p-6 rounded-lg">
                       <div className="flex justify-between items-center mb-4">
@@ -429,25 +425,24 @@ const ProductDetail = () => {
                           <span className="mr-2 font-bold text-lg">{product.ingredientAnalysis.safetyScore}/100</span>
                           <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold"
                             style={{
-                              backgroundColor: `${
-                                product.ingredientAnalysis.safetyScore >= 80 ? '#10B981' :
-                                product.ingredientAnalysis.safetyScore >= 60 ? '#84CC16' :
-                                product.ingredientAnalysis.safetyScore >= 40 ? '#FBBF24' :
-                                product.ingredientAnalysis.safetyScore >= 20 ? '#F97316' :
-                                '#EF4444'
-                              }`
+                              backgroundColor: `${product.ingredientAnalysis.safetyScore >= 80 ? '#10B981' :
+                                  product.ingredientAnalysis.safetyScore >= 60 ? '#84CC16' :
+                                    product.ingredientAnalysis.safetyScore >= 40 ? '#FBBF24' :
+                                      product.ingredientAnalysis.safetyScore >= 20 ? '#F97316' :
+                                        '#EF4444'
+                                }`
                             }}
                           >
                             {product.ingredientAnalysis.safetyScore}
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-white p-4 rounded-lg mb-4 border border-gray-200">
                         <h3 className="font-semibold text-gray-700 mb-2">Overall Safety Assessment</h3>
                         <p className="text-gray-600">{product.ingredientAnalysis.overallSafety}</p>
                       </div>
-                      
+
                       {/* Extracted Text */}
                       {product.ingredientAnalysis.extractedText && (
                         <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -455,7 +450,7 @@ const ProductDetail = () => {
                           <p className="text-gray-600 italic">{product.ingredientAnalysis.extractedText}</p>
                         </div>
                       )}
-                      
+
                       {/* Identified Ingredients */}
                       {product.ingredients && product.ingredients.length > 0 && (
                         <div className="mb-6 bg-white p-4 rounded-lg border border-gray-200">
@@ -469,22 +464,21 @@ const ProductDetail = () => {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Harmful Ingredients */}
                       <div className="mb-6">
                         <h3 className="font-semibold text-gray-700 mb-3">Potentially Harmful Ingredients</h3>
-                        {product.ingredientAnalysis.harmfulIngredients && 
-                         product.ingredientAnalysis.harmfulIngredients.length > 0 ? (
+                        {product.ingredientAnalysis.harmfulIngredients &&
+                          product.ingredientAnalysis.harmfulIngredients.length > 0 ? (
                           <div className="space-y-4">
                             {product.ingredientAnalysis.harmfulIngredients.map((ingredient, index) => (
                               <div key={index} className="bg-white p-4 rounded-lg border-l-4 border-red-500 shadow-sm">
                                 <div className="flex justify-between items-center mb-2">
                                   <h4 className="font-bold text-gray-800">{ingredient.name}</h4>
-                                  <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${
-                                    ingredient.severity === 'high' ? 'bg-red-500' :
-                                    ingredient.severity === 'medium' ? 'bg-orange-500' :
-                                    'bg-yellow-500'
-                                  }`}>
+                                  <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${ingredient.severity === 'high' ? 'bg-red-500' :
+                                      ingredient.severity === 'medium' ? 'bg-orange-500' :
+                                        'bg-yellow-500'
+                                    }`}>
                                     {ingredient.severity} risk
                                   </span>
                                 </div>
@@ -498,41 +492,41 @@ const ProductDetail = () => {
                           </p>
                         )}
                       </div>
-                      
+
                       {/* Safe Ingredients */}
-                      {product.ingredientAnalysis.safeIngredients && 
-                       product.ingredientAnalysis.safeIngredients.length > 0 && (
-                        <div className="mb-6">
-                          <h3 className="font-semibold text-gray-700 mb-3">Safe Ingredients</h3>
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <div className="flex flex-wrap gap-2">
-                              {product.ingredientAnalysis.safeIngredients.map((ingredient, index) => (
-                                <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
-                                  {ingredient}
-                                </span>
-                              ))}
+                      {product.ingredientAnalysis.safeIngredients &&
+                        product.ingredientAnalysis.safeIngredients.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="font-semibold text-gray-700 mb-3">Safe Ingredients</h3>
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="flex flex-wrap gap-2">
+                                {product.ingredientAnalysis.safeIngredients.map((ingredient, index) => (
+                                  <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                                    {ingredient}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                      
+                        )}
+
                       {/* Unknown Ingredients */}
-                      {product.ingredientAnalysis.unknownIngredients && 
-                       product.ingredientAnalysis.unknownIngredients.length > 0 && (
-                        <div className="mb-6">
-                          <h3 className="font-semibold text-gray-700 mb-3">Ingredients with Unknown Safety Profile</h3>
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <div className="flex flex-wrap gap-2">
-                              {product.ingredientAnalysis.unknownIngredients.map((ingredient, index) => (
-                                <span key={index} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">
-                                  {ingredient}
-                                </span>
-                              ))}
+                      {product.ingredientAnalysis.unknownIngredients &&
+                        product.ingredientAnalysis.unknownIngredients.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="font-semibold text-gray-700 mb-3">Ingredients with Unknown Safety Profile</h3>
+                            <div className="bg-white p-4 rounded-lg border border-gray-200">
+                              <div className="flex flex-wrap gap-2">
+                                {product.ingredientAnalysis.unknownIngredients.map((ingredient, index) => (
+                                  <span key={index} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">
+                                    {ingredient}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                      
+                        )}
+
                       {/* Detailed Analysis */}
                       <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <h3 className="font-semibold text-blue-800 mb-2">Detailed Analysis</h3>
@@ -560,7 +554,7 @@ const ProductDetail = () => {
                   <div className="mt-6 bg-gray-100 p-4 rounded-lg">
                     <h3 className="font-semibold text-gray-700 mb-3">Nutritional Information</h3>
                     <div className="flex items-center justify-center">
-                      <img 
+                      <img
                         src={getImageUrl(product, 'nutrients')}
                         alt="Nutritional Information"
                         className="max-w-full h-auto max-h-64 object-contain rounded shadow"
