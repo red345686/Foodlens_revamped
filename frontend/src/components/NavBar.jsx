@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { motion, AnimatePresence } from 'framer-motion';
 import { buttonHover, buttonTap } from './animations';
-import logoImage from '../assets/logo.png';
+import logo from '../assets/logo.png';
 
 function NavBar({ page }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -179,7 +179,7 @@ function NavBar({ page }) {
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-8 sm:w-10 rounded-lg"
-                src={logoImage}
+                src={logo}
                 alt="FoodLens Logo"
               />
               <motion.span
