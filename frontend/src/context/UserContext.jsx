@@ -18,11 +18,11 @@ export const UserProvider = ({ children }) => {
     const checkLoggedInUser = async () => {
       // Prevent multiple simultaneous checks
       if (isCheckingUserRef.current || hasAttemptedFetch) return;
-      
+
       try {
         isCheckingUserRef.current = true;
         setLoading(true);
-        
+
         // First check if user is authenticated via Firebase (AuthContext)
         if (firebaseUser) {
           // If Firebase has a user but we don't have a user in context, try to get user data
@@ -30,36 +30,38 @@ export const UserProvider = ({ children }) => {
             setHasAttemptedFetch(true);
             const token = await firebaseUser.getIdToken();
             localStorage.setItem('firebaseToken', token);
-            
-            const response = await userAPI.getDefaultUser();
+
+            // Try to automatically log in with Firebase credentials
+            const response = await userAPI.login({
+              firebaseId: firebaseUser.uid,
+              email: firebaseUser.email
+            });
+
             setCurrentUser(response.data);
             // Save user to local storage
             localStorage.setItem('currentUser', JSON.stringify(response.data));
           } catch (err) {
-            console.warn('Failed to fetch user profile, using basic auth data', err);
-            // Fallback to basic user info from Firebase
-            // Use Firebase UID directly as the _id
-            const basicUser = {
-              _id: firebaseUser.uid, // This is the Firebase UID
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName || firebaseUser.email,
-              photoURL: firebaseUser.photoURL,
-              following: []
-            };
-            setCurrentUser(basicUser);
-            localStorage.setItem('currentUser', JSON.stringify(basicUser));
-            
-            // Create a new user in the backend using Firebase data
+            console.warn('Failed to auto-login with Firebase credentials, will try to create user', err);
+
+            // If login fails, try to register the user using Firebase info
             try {
-              // Only try to register if we couldn't fetch the user (likely doesn't exist yet)
               await userAPI.register({
                 username: firebaseUser.displayName || firebaseUser.email.split('@')[0],
                 email: firebaseUser.email,
                 password: 'firebase-auth', // Dummy password as auth is handled by Firebase
                 firebaseId: firebaseUser.uid // Pass Firebase UID for use as _id
               });
+
+              // Now try to log in again
+              const response = await userAPI.login({
+                firebaseId: firebaseUser.uid,
+                email: firebaseUser.email
+              });
+
+              setCurrentUser(response.data);
+              localStorage.setItem('currentUser', JSON.stringify(response.data));
             } catch (regErr) {
-              // Continue anyway - user can still use the app
+              console.error('Failed to auto-register with Firebase credentials', regErr);
             }
           }
         } else {
@@ -72,12 +74,12 @@ export const UserProvider = ({ children }) => {
             setCurrentUser(null);
           }
         }
-        
+
         setError(null);
       } catch (err) {
         console.error('Error checking logged in user:', err);
         setError('Failed to load user data');
-        
+
       } finally {
         setLoading(false);
         isCheckingUserRef.current = false;
@@ -207,4 +209,4 @@ export const UserProvider = ({ children }) => {
       {children}
     </UserContext.Provider>
   );
-}; 
+};
