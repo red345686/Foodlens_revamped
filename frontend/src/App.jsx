@@ -54,7 +54,7 @@ function App() {
     },
     {
       path: "/explore",
-      element: <TransitionWrapper page='explore'><Explore /></TransitionWrapper>
+      element: <TransitionWrapper page='explore'><Products /></TransitionWrapper>
     },
     {
       path: "/login",
