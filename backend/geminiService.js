@@ -18,7 +18,7 @@ function validateImageFile(imagePath) {
   if (!fs.existsSync(imagePath)) {
     throw new Error(`Image file not found at path: ${imagePath}`);
   }
-  
+
   const stats = fs.statSync(imagePath);
   if (stats.size === 0) {
     throw new Error('Image file is empty');
@@ -36,36 +36,36 @@ async function analyzeIngredientsImage(imagePath) {
   try {
     // Validate image file
     validateImageFile(imagePath);
-    
+
     console.log('Starting ingredients analysis process...');
-    
+
     // Step 1: Extract text from image using Python OCR
     let extractedText = '';
     let parsedIngredients = [];
-    
+
     try {
       // First try Python OCR extraction
       console.log('Attempting to extract text using Python OCR...');
       extractedText = await extractTextWithPythonOcr(imagePath);
-      
+
       // If Python OCR failed or returned an error message
       if (extractedText.startsWith('Error:') || extractedText.length < 10) {
         console.warn('Python OCR returned insufficient text, trying Gemini OCR fallback...');
         extractedText = await extractTextWithGeminiOcr(imagePath);
       }
-      
+
       parsedIngredients = parseIngredientsFromText(extractedText);
-      
+
       console.log('OCR extracted text:', extractedText);
       console.log('Parsed ingredients:', parsedIngredients);
     } catch (ocrError) {
       console.error('Primary OCR extraction failed, trying Gemini OCR fallback:', ocrError);
-      
+
       try {
         // Try Gemini OCR as fallback
         extractedText = await extractTextWithGeminiOcr(imagePath);
         parsedIngredients = parseIngredientsFromText(extractedText);
-        
+
         console.log('Gemini OCR extracted text:', extractedText);
         console.log('Parsed ingredients:', parsedIngredients);
       } catch (geminiOcrError) {
@@ -73,16 +73,16 @@ async function analyzeIngredientsImage(imagePath) {
         // Will fall back to Gemini image analysis
       }
     }
-    
+
     // Step 2: Analyze ingredients with Gemini
     console.log('Starting ingredients analysis with Gemini API...');
-    
+
     // Initialize the model
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    
+
     // Create prompt for Gemini - using the extracted text if available
     let prompt;
-    
+
     if (extractedText && extractedText.length > 10) {
       // We have OCR text, so analyze that directly
       prompt = `
@@ -131,7 +131,7 @@ async function analyzeIngredientsImage(imagePath) {
     } else {
       // No good OCR text, fall back to base64 image analysis
       const base64Image = encodeImageToBase64(imagePath);
-      
+
       prompt = `
         You are a food safety expert specializing in extracting and analyzing ingredient lists from product labels.
         
@@ -177,7 +177,7 @@ async function analyzeIngredientsImage(imagePath) {
         If you cannot read the ingredients clearly, include the text "Unable to clearly read all ingredients" in the extractedText field, but still make your best attempt at analyzing any ingredients you can identify.
       `;
     }
-    
+
     // Generate text with the model
     try {
       console.log('Sending request to Gemini API...');
@@ -185,29 +185,29 @@ async function analyzeIngredientsImage(imagePath) {
       const text = result.response.text();
       console.log('Received response from Gemini API');
       console.log('Full response text from Gemini API:', text);
-      
+
       // Extract JSON from response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         console.error('Could not extract JSON from response:', text.substring(0, 500));
         throw new Error('Failed to extract valid JSON from Gemini response');
       }
-      
+
       try {
         const analysis = JSON.parse(jsonMatch[0]);
-        
+
         // Log the extracted text for debugging
         if (analysis.extractedText) {
           console.log('Final extracted text:', analysis.extractedText);
         }
-        
+
         console.log('Raw scores from API:', {
           nutritionScore: analysis.nutritionScore,
           sustainabilityScore: analysis.sustainabilityScore,
           processingLevel: analysis.processingLevel,
           safetyScore: analysis.safetyScore
         });
-        
+
         // Ensure required fields are present
         if (!analysis.ingredients || analysis.ingredients.length === 0) {
           console.warn('No ingredients detected in the image');
@@ -219,14 +219,14 @@ async function analyzeIngredientsImage(imagePath) {
             analysis.ingredients = parsedIngredients.length > 0 ? parsedIngredients : [];
           }
         }
-        
+
         if (!analysis.harmfulIngredients) analysis.harmfulIngredients = [];
         if (!analysis.safeIngredients) analysis.safeIngredients = [];
         if (!analysis.unknownIngredients) analysis.unknownIngredients = [];
         if (!analysis.safetyScore) analysis.safetyScore = 50;
         if (!analysis.overallSafety) {
-          analysis.overallSafety = analysis.ingredients.length === 0 
-            ? "Unable to determine safety due to unclear ingredient list" 
+          analysis.overallSafety = analysis.ingredients.length === 0
+            ? "Unable to determine safety due to unclear ingredient list"
             : "Moderate safety rating based on identified ingredients";
         }
         if (!analysis.detailedAnalysis) {
@@ -234,12 +234,12 @@ async function analyzeIngredientsImage(imagePath) {
             ? "Could not read ingredients clearly from the provided image"
             : "Analysis based on identified ingredients";
         }
-        
+
         // Ensure nutrition, sustainability and processing level fields are present
         if (!analysis.nutritionScore) analysis.nutritionScore = 50;
         if (!analysis.sustainabilityScore) analysis.sustainabilityScore = 50;
         if (!analysis.processingLevel) analysis.processingLevel = "processed";
-        
+
         return analysis;
       } catch (jsonError) {
         console.error('Error parsing JSON from Gemini response:', jsonError);
@@ -260,15 +260,15 @@ async function analyzeProductImage(imagePath, productData) {
   try {
     // Validate image file
     validateImageFile(imagePath);
-    
+
     console.log('Starting product analysis with Gemini API...');
-    
+
     // Encode image to base64
     const base64Image = encodeImageToBase64(imagePath);
-    
+
     // Initialize the model - using gemini-2.0-flash
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    
+
     // Create prompt for Gemini to analyze the product
     const prompt = `
       You are a nutritionist and food science expert analyzing a food product.
@@ -302,7 +302,7 @@ async function analyzeProductImage(imagePath, productData) {
       IMPORTANT: nutritionScore and sustainabilityScore MUST be numbers, not strings. Do not wrap them in quotes.
       Always include ALL fields in your response, even if empty (use [] for empty lists and 50 for uncertain scores).
     `;
-    
+
     // Generate text with the model
     try {
       console.log('Sending request to Gemini API...');
@@ -310,7 +310,7 @@ async function analyzeProductImage(imagePath, productData) {
       const text = result.response.text();
       console.log('Received response from Gemini API. First 500 chars:', text.substring(0, 500));
       console.log('Full response text from Gemini API:', text);
-      
+
       // Extract JSON from response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
@@ -318,24 +318,24 @@ async function analyzeProductImage(imagePath, productData) {
         // Provide default values if no JSON response
         return createDefaultAnalysis("Could not extract JSON from Gemini response");
       }
-      
+
       try {
         const jsonText = jsonMatch[0];
         console.log('Extracted JSON text:', jsonText.substring(0, 500));
-        
+
         const analysis = JSON.parse(jsonText);
         console.log('Parsed analysis object:', analysis);
-        
+
         console.log('Raw scores from API:', {
           nutritionScore: analysis.nutritionScore,
           sustainabilityScore: analysis.sustainabilityScore,
           processingLevel: analysis.processingLevel
         });
-        
+
         // Validate the analysis object to ensure it has the required fields
         const validatedAnalysis = validateAndNormalizeAnalysis(analysis);
         console.log('Validated analysis object:', validatedAnalysis);
-        
+
         return validatedAnalysis;
       } catch (jsonError) {
         console.error('Error parsing JSON from Gemini response:', jsonError);
@@ -380,18 +380,18 @@ function validateAndNormalizeAnalysis(analysis) {
     processingLevel: "processed", // Default value
     overallRecommendation: "No specific recommendation available"
   };
-  
+
   // Process nutritionScore - ensure it's a number between 0-100
   if (analysis.nutritionScore !== undefined && analysis.nutritionScore !== null) {
     let score = analysis.nutritionScore;
     console.log('Original nutritionScore from API:', score, 'type:', typeof score);
-    
+
     if (typeof score === 'string') {
       // Try to convert string to number
       score = parseFloat(score);
       console.log('Converted nutritionScore from string:', score);
     }
-    
+
     if (!isNaN(score) && score >= 0 && score <= 100) {
       normalized.nutritionScore = score;
       console.log('Final normalized nutritionScore:', normalized.nutritionScore);
@@ -401,18 +401,18 @@ function validateAndNormalizeAnalysis(analysis) {
   } else {
     console.warn('nutritionScore is undefined or null, using default');
   }
-  
+
   // Process sustainabilityScore - ensure it's a number between 0-100
   if (analysis.sustainabilityScore !== undefined && analysis.sustainabilityScore !== null) {
     let score = analysis.sustainabilityScore;
     console.log('Original sustainabilityScore from API:', score, 'type:', typeof score);
-    
+
     if (typeof score === 'string') {
       // Try to convert string to number
       score = parseFloat(score);
       console.log('Converted sustainabilityScore from string:', score);
     }
-    
+
     if (!isNaN(score) && score >= 0 && score <= 100) {
       normalized.sustainabilityScore = score;
       console.log('Final normalized sustainabilityScore:', normalized.sustainabilityScore);
@@ -422,29 +422,29 @@ function validateAndNormalizeAnalysis(analysis) {
   } else {
     console.warn('sustainabilityScore is undefined or null, using default');
   }
-  
+
   // Process other string fields
   if (analysis.nutritionEvaluation) {
     normalized.nutritionEvaluation = analysis.nutritionEvaluation;
   }
-  
+
   if (analysis.processingLevel) {
     normalized.processingLevel = analysis.processingLevel;
   }
-  
+
   if (analysis.overallRecommendation) {
     normalized.overallRecommendation = analysis.overallRecommendation;
   }
-  
+
   // Process array fields
   if (Array.isArray(analysis.allergens)) {
     normalized.allergens = analysis.allergens;
   }
-  
+
   if (Array.isArray(analysis.additives)) {
     normalized.additives = analysis.additives;
   }
-  
+
   return normalized;
 }
 
@@ -452,16 +452,37 @@ function validateAndNormalizeAnalysis(analysis) {
 async function analyzeManualIngredients(ingredientsText) {
   try {
     console.log('Starting manual ingredients analysis with Gemini API...');
-    
+
+    // Validate and sanitize input
+    if (!ingredientsText || typeof ingredientsText !== 'string') {
+      console.error('Invalid ingredients text provided:', ingredientsText);
+      throw new Error('Invalid ingredients text: must be a non-empty string');
+    }
+
+    // Sanitize the ingredients text
+    const sanitizedText = String(ingredientsText)
+      .trim()
+      .replace(/\s+/g, ' ')           // Normalize whitespace
+      .replace(/(\d+\.?\d*)\s*%/g, '') // Remove percentages
+      .replace(/\([^)]*\)/g, '')      // Remove content in parentheses
+      .replace(/\s*,\s*/g, ', ');     // Standardize commas
+
+    if (sanitizedText.length < 3) {
+      console.error('Ingredients text too short after sanitization:', sanitizedText);
+      throw new Error('Ingredients text too short or invalid after sanitization');
+    }
+
+    console.log('Sanitized ingredients text:', sanitizedText);
+
     // Initialize the model - using gemini-2.0-flash
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    
+
     // Create prompt for Gemini to analyze the ingredients
     const prompt = `
       You are a food safety expert specialized in analyzing ingredient lists.
       
       I'm providing a list of ingredients from a food product:
-      "${ingredientsText}"
+      "${sanitizedText}"
       
       IMPORTANT INSTRUCTIONS:
       1. First, carefully parse this text into individual ingredients.
@@ -496,7 +517,7 @@ async function analyzeManualIngredients(ingredientsText) {
       
       IMPORTANT: safetyScore, nutritionScore, and sustainabilityScore MUST be numbers, not strings. Do not wrap them in quotes.
     `;
-    
+
     // Generate text with the model
     try {
       console.log('Sending request to Gemini API...');
@@ -504,54 +525,54 @@ async function analyzeManualIngredients(ingredientsText) {
       const text = result.response.text();
       console.log('Received response from Gemini API');
       console.log('Full response text from Gemini API:', text);
-      
+
       // Extract JSON from response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         console.error('Could not extract JSON from response:', text.substring(0, 500));
         throw new Error('Failed to extract valid JSON from Gemini response');
       }
-      
+
       try {
         const analysis = JSON.parse(jsonMatch[0]);
-        
+
         // Ensure required fields are present
         if (!analysis.ingredients || analysis.ingredients.length === 0) {
           console.warn('No ingredients detected in the provided text');
           // Extract ingredients from the text as a fallback
-          analysis.ingredients = ingredientsText
+          analysis.ingredients = sanitizedText
             .split(/,|;/)
             .map(item => item.trim())
             .filter(item => item.length > 0);
-            
+
           console.log('Created ingredients list from manual text:', analysis.ingredients);
         }
-        
+
         console.log('Raw scores from API:', {
           nutritionScore: analysis.nutritionScore,
           sustainabilityScore: analysis.sustainabilityScore,
           processingLevel: analysis.processingLevel,
           safetyScore: analysis.safetyScore
         });
-        
+
         if (!analysis.harmfulIngredients) analysis.harmfulIngredients = [];
         if (!analysis.safeIngredients) analysis.safeIngredients = [];
         if (!analysis.unknownIngredients) analysis.unknownIngredients = [];
         if (!analysis.safetyScore) analysis.safetyScore = 50;
         if (!analysis.overallSafety) {
-          analysis.overallSafety = analysis.ingredients.length === 0 
-            ? "Unable to determine safety due to unclear ingredient list" 
+          analysis.overallSafety = analysis.ingredients.length === 0
+            ? "Unable to determine safety due to unclear ingredient list"
             : "Moderate safety rating based on identified ingredients";
         }
         if (!analysis.detailedAnalysis) {
           analysis.detailedAnalysis = "Analysis based on the provided ingredients list";
         }
-        
+
         // Ensure nutrition, sustainability and processing level fields are present
         if (!analysis.nutritionScore) analysis.nutritionScore = 50;
         if (!analysis.sustainabilityScore) analysis.sustainabilityScore = 50;
         if (!analysis.processingLevel) analysis.processingLevel = "processed";
-        
+
         return analysis;
       } catch (jsonError) {
         console.error('Error parsing JSON from Gemini response:', jsonError);
@@ -563,8 +584,25 @@ async function analyzeManualIngredients(ingredientsText) {
     }
   } catch (error) {
     console.error('Error in analyzeManualIngredients:', error);
-    throw new Error(`Failed to analyze ingredients: ${error.message}`);
+
+    // Return a fallback analysis object rather than throwing an error
+    const fallbackIngredients = ingredientsText
+      ? ingredientsText.split(/,|;/).map(i => i.trim()).filter(i => i.length > 0)
+      : [];
+
+    return {
+      ingredients: fallbackIngredients,
+      harmfulIngredients: [],
+      safeIngredients: fallbackIngredients,
+      unknownIngredients: [],
+      safetyScore: 50,
+      overallSafety: "Unable to perform full analysis on ingredients",
+      detailedAnalysis: `Could not complete analysis due to: ${error.message}. The product contains: ${fallbackIngredients.join(', ')}`,
+      nutritionScore: 50,
+      sustainabilityScore: 50,
+      processingLevel: "processed"
+    };
   }
 }
 
-export { analyzeProductImage, analyzeIngredientsImage, analyzeManualIngredients }; 
+export { analyzeProductImage, analyzeIngredientsImage, analyzeManualIngredients };

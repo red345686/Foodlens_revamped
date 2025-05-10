@@ -13,6 +13,7 @@ export async function fetchProductByBarcode(barcode) {
         return data;
     } catch (error) {
         console.log("Error fetching product details:", error.message);
+        return null; // Explicitly return null
     }
 }
 

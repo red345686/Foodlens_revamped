@@ -522,10 +522,9 @@ const Products = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200">
+    <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200 pt-20">
       <NavBar page="products" />
       <div className="max-w-7xl mx-auto px-4 py-10">
-        <br />
         <h1 className="text-3xl font-extrabold text-green-900 mb-8 text-center tracking-tight drop-shadow-lg">Explore Products</h1>
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
           <input
@@ -539,220 +538,23 @@ const Products = () => {
             className="bg-white border border-gray-200 rounded-lg px-4 py-2 flex items-center text-green-900 shadow-sm"
             onClick={() => setSearchTerm('')}
           >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M6 6v12m12-12v12M6 18h12" /></svg>
             Clear
           </button>
           <button
             className="bg-green-700 text-white rounded-lg px-4 py-2 flex items-center shadow-sm"
             onClick={() => setShowUploadForm(!showUploadForm)}
           >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" /></svg>
-            {showUploadForm ? 'Hide Upload Form' : 'Upload Your Food'}
+            Upload Your Food
           </button>
           <button
             className={`${fixingAllProducts ? 'bg-gray-400' : 'bg-yellow-600 hover:bg-yellow-700'} text-white rounded-lg px-4 py-2 flex items-center shadow-sm transition`}
             onClick={handleFixAllProducts}
             disabled={fixingAllProducts}
           >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-            {fixingAllProducts ? 'Fixing...' : 'Fix All Products'}
+            Fix All Products
           </button>
         </div>
 
-        {fixAllStatus && (
-          <div className={`mb-4 p-3 rounded-lg ${fixAllStatus.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
-            fixAllStatus.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
-              'bg-blue-50 text-blue-800 border border-blue-200'
-            }`}>
-            <p>{fixAllStatus.message}</p>
-          </div>
-        )}
-
-        {/* Upload Form */}
-        {showUploadForm && (
-          <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-bold mb-4 text-green-900">Upload and Analyze Your Product</h2>
-
-            {/* Tabs for different upload methods */}
-            <div className="border-b border-gray-200 mb-6">
-              <nav className="-mb-px flex">
-                <button
-                  onClick={() => setActiveTab('barcode')}
-                  className={`w-1/2 py-3 px-4 text-center font-medium text-sm ${activeTab === 'barcode'
-                    ? 'border-b-2 border-green-500 text-green-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                >
-                  Barcode Scan
-                </button>
-                <button
-                  onClick={() => setActiveTab('ingredients')}
-                  className={`w-1/2 py-3 px-4 text-center font-medium text-sm ${activeTab === 'ingredients'
-                    ? 'border-b-2 border-green-500 text-green-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                >
-                  Ingredients Analysis
-                </button>
-              </nav>
-            </div>
-
-            {processingStatus && (
-              <div className={`p-3 rounded-md mb-4 ${processingStatus.includes('successfully') ? 'bg-green-100 text-green-800' :
-                processingStatus.includes('Error') || processingStatus.includes('Failed') || processingStatus.includes('Please') ? 'bg-red-100 text-red-800' :
-                  'bg-blue-100 text-blue-800'
-                }`}>
-                {processingStatus}
-              </div>
-            )}
-
-            {activeTab === 'barcode' && (
-              <div>
-                {/* Barcode image upload and scan */}
-                <div className="mb-6">
-                  <label className="block text-gray-700 text-sm font-medium mb-2">Upload Barcode Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleBarcodeImageChange}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleBarcodeUpload}
-                    disabled={!barcodeImage}
-                    className={`mt-2 w-full ${!barcodeImage ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white py-2 px-4 rounded`}
-                  >
-                    Scan Barcode
-                  </button>
-                </div>
-                {/* Direct barcode entry and search */}
-                <form onSubmit={handleBarcodeSearch}>
-                  <div className="mb-6">
-                    <label className="block text-gray-700 text-sm font-medium mb-2">Enter Barcode</label>
-                    <input
-                      type="text"
-                      value={barcode}
-                      onChange={(e) => setBarcode(e.target.value)}
-                      placeholder="Enter or scan barcode"
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={!barcode}
-                    className={`w-full ${!barcode ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white py-3 px-4 rounded-md font-medium`}
-                  >
-                    Search Product
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {activeTab === 'ingredients' && (
-              <div>
-                <div className="mb-6">
-                  <label className="block text-gray-700 text-sm font-medium mb-2">Product Name</label>
-                  <input
-                    type="text"
-                    value={productNameForIngredients}
-                    onChange={handleProductNameChange}
-                    placeholder="Enter product name"
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-
-                <div className="flex justify-between mb-3">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={toggleIngredientsInputMethod}
-                      className="text-green-600 text-xs font-medium underline"
-                    >
-                      {ingredientsInputMethod === "image"
-                        ? "Enter ingredients manually instead"
-                        : "Upload image instead"}
-                    </button>
-
-                    {ingredientsInputMethod === "image" && (
-                      <button
-                        onClick={toggleImageTips}
-                        className="text-green-600 text-xs font-medium underline"
-                      >
-                        {imageQualityTips ? "Hide image tips" : "Tips for best results"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {imageQualityTips && ingredientsInputMethod === "image" && (
-                  <div className="mt-3 p-3 bg-green-50 rounded-md text-xs text-gray-700 mb-4">
-                    <h4 className="font-bold mb-1">For best analysis results:</h4>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Ensure text is clearly visible and focused</li>
-                      <li>Take the photo in good lighting</li>
-                      <li>Capture just the ingredients section</li>
-                      <li>Avoid shadows and glare on the package</li>
-                      <li>Hold the camera steady and close to the text</li>
-                    </ul>
-                  </div>
-                )}
-
-                {ingredientsInputMethod === "image" ? (
-                  <div className="mb-6">
-                    <label className="block text-gray-700 text-sm font-medium mb-2">Ingredients Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleIngredientsImageChange}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    />
-
-                    {ingredientsImagePreview && (
-                      <div className="mt-2 p-2 border border-gray-300 rounded-md">
-                        <img
-                          src={ingredientsImagePreview}
-                          alt="Ingredients preview"
-                          className="max-h-40 max-w-full object-contain mx-auto"
-                        />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="mb-6">
-                    <label className="block text-gray-700 text-sm font-medium mb-2">Ingredients List</label>
-                    <textarea
-                      value={manualIngredients}
-                      onChange={handleManualIngredientsChange}
-                      placeholder="Enter ingredients separated by commas"
-                      rows={4}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-2">Nutrition Facts Image (Optional)</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleNutritionImageChange}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleIngredientsAnalysis}
-                  disabled={ingredientsInputMethod === "image" ? !ingredientsImage : !manualIngredients}
-                  className={`w-full ${ingredientsInputMethod === "image" && !ingredientsImage || ingredientsInputMethod === "manual" && !manualIngredients ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white py-3 px-4 rounded-md font-medium`}
-                >
-                  Analyze Ingredients
-                </button>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Products Grid */}
         {loading ? (
@@ -774,11 +576,11 @@ const Products = () => {
                     className="w-full h-full object-cover transition duration-300 transform hover:scale-105"
                     loading="lazy"
                     onError={(e) => {
-                      console.log("Image failed to load:", e.target.src);
                       e.target.onerror = null;
                       e.target.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80';
                     }}
                   />
+
 
                   {/* Health Score Badge */}
                   {product.analysis?.nutritionScore && (
@@ -823,6 +625,9 @@ const Products = () => {
                       </span>
                     </div>
                   )}
+                </div>
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{product.name}</h3>
                 </div>
               </Link>
             ))}

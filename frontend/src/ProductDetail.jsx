@@ -191,7 +191,7 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200">
+      <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200 pt-16">
         <NavBar />
         <div className="max-w-7xl mx-auto px-4 py-16 flex justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
@@ -202,7 +202,7 @@ const ProductDetail = () => {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200">
+      <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200 pt-16">
         <NavBar />
         <div className="max-w-7xl mx-auto px-4 py-16">
           <div className="bg-white rounded-lg shadow-lg p-6 text-center">
@@ -609,4 +609,4 @@ const ProductDetail = () => {
   );
 };
 
-export default ProductDetail; 
+export default ProductDetail;

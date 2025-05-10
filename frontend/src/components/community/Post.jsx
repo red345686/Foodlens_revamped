@@ -156,7 +156,7 @@ const Post = memo(({ post, currentUser, onLike, onComment, onDelete }) => {
         <div className="relative">
           {console.log('Rendering image with src:', post.images[0])}
           <img 
-            src={post.images[0]} 
+            src={post.images[0] } 
             alt="Post" 
             className="w-full object-cover max-h-96"
             onError={(e) => {
