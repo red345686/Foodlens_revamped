@@ -19,10 +19,10 @@ const userSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
   }],
   messagingPrivacy: {
-    allowMessagesFrom: { 
-      type: String, 
-      enum: ['everyone', 'following', 'followers', 'mutualFollows'], 
-      default: 'everyone' 
+    allowMessagesFrom: {
+      type: String,
+      enum: ['everyone', 'following', 'followers', 'mutualFollows'],
+      default: 'everyone'
     },
     blockedUsers: [{ type: String, ref: 'User' }]
   },

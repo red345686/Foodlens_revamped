@@ -243,8 +243,8 @@ const ProductDetail = () => {
               <button
                 onClick={() => setActiveTab('product')}
                 className={`w-1/2 py-4 px-4 text-center font-medium text-sm ${activeTab === 'product'
-                    ? 'border-b-2 border-green-500 text-green-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-b-2 border-green-500 text-green-600'
+                  : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
               >
                 Product Analysis
@@ -252,8 +252,8 @@ const ProductDetail = () => {
               <button
                 onClick={() => setActiveTab('ingredients')}
                 className={`w-1/2 py-4 px-4 text-center font-medium text-sm ${activeTab === 'ingredients'
-                    ? 'border-b-2 border-green-500 text-green-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-b-2 border-green-500 text-green-600'
+                  : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
               >
                 Ingredient Analysis
@@ -303,8 +303,8 @@ const ProductDetail = () => {
 
                           {fixMessage && (
                             <p className={`mt-2 text-sm ${fixMessage.type === 'success' ? 'text-green-600' :
-                                fixMessage.type === 'error' ? 'text-red-600' :
-                                  'text-blue-600'
+                              fixMessage.type === 'error' ? 'text-red-600' :
+                                'text-blue-600'
                               }`}>
                               {fixMessage.text}
                             </p>
@@ -345,10 +345,10 @@ const ProductDetail = () => {
                       <div className="mb-6">
                         <h3 className="font-semibold text-gray-700 mb-2">Processing Level</h3>
                         <span className={`px-3 py-1 rounded-full text-white text-sm font-semibold ${!product.analysis.processingLevel ? 'bg-gray-500' :
-                            product.analysis.processingLevel === 'minimally processed' ? 'bg-green-500' :
-                              product.analysis.processingLevel === 'processed' ? 'bg-yellow-400' :
-                                product.analysis.processingLevel === 'highly processed' ? 'bg-orange-500' :
-                                  'bg-red-500'
+                          product.analysis.processingLevel === 'minimally processed' ? 'bg-green-500' :
+                            product.analysis.processingLevel === 'processed' ? 'bg-yellow-400' :
+                              product.analysis.processingLevel === 'highly processed' ? 'bg-orange-500' :
+                                'bg-red-500'
                           }`}>
                           {product.analysis.processingLevel || 'Unknown'}
                         </span>
@@ -426,10 +426,10 @@ const ProductDetail = () => {
                           <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold"
                             style={{
                               backgroundColor: `${product.ingredientAnalysis.safetyScore >= 80 ? '#10B981' :
-                                  product.ingredientAnalysis.safetyScore >= 60 ? '#84CC16' :
-                                    product.ingredientAnalysis.safetyScore >= 40 ? '#FBBF24' :
-                                      product.ingredientAnalysis.safetyScore >= 20 ? '#F97316' :
-                                        '#EF4444'
+                                product.ingredientAnalysis.safetyScore >= 60 ? '#84CC16' :
+                                  product.ingredientAnalysis.safetyScore >= 40 ? '#FBBF24' :
+                                    product.ingredientAnalysis.safetyScore >= 20 ? '#F97316' :
+                                      '#EF4444'
                                 }`
                             }}
                           >
@@ -476,8 +476,8 @@ const ProductDetail = () => {
                                 <div className="flex justify-between items-center mb-2">
                                   <h4 className="font-bold text-gray-800">{ingredient.name}</h4>
                                   <span className={`px-2 py-1 rounded text-xs font-semibold text-white ${ingredient.severity === 'high' ? 'bg-red-500' :
-                                      ingredient.severity === 'medium' ? 'bg-orange-500' :
-                                        'bg-yellow-500'
+                                    ingredient.severity === 'medium' ? 'bg-orange-500' :
+                                      'bg-yellow-500'
                                     }`}>
                                     {ingredient.severity} risk
                                   </span>
