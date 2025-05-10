@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
     // Use product name from request body with file type as suffix for better identification
     const productName = req.body.name ? req.body.name.toLowerCase().replace(/[^a-z0-9]/g, '_') : '';
     let fileType = '';
-    
+
     if (file.fieldname === 'productPhoto') {
       fileType = 'productimage';
     } else if (file.fieldname === 'ingredientsImage') {
@@ -36,7 +36,7 @@ const storage = multer.diskStorage({
     } else {
       fileType = file.fieldname;
     }
-    
+
     // If product name is provided, use productname_imagetype format
     if (productName) {
       const fileName = `${productName}_${fileType}${path.extname(file.originalname)}`;
@@ -60,9 +60,9 @@ router.post('/upload-barcode-image', upload.single('image'), async (req, res) =>
 
     // Extract barcode from image
     const barcode = await extractBarcodeFromImage(req.file.path);
-    
-    res.json({ 
-      status: 'success', 
+
+    res.json({
+      status: 'success',
       barcode: barcode.trim(),
       imagePath: req.file.path
     });
@@ -82,16 +82,16 @@ router.post('/analyze-ingredients', upload.fields([
     if (!req.files || !req.files.ingredientsImage) {
       return res.status(400).json({ error: 'No ingredients image uploaded' });
     }
-    
+
     const { productId, name } = req.body;
     const ingredientsImagePath = req.files.ingredientsImage[0].path;
     const productPhotoPath = req.files.productPhoto ? req.files.productPhoto[0].path : null;
     const nutritionalContentImagePath = req.files.nutritionalContentImage ? req.files.nutritionalContentImage[0].path : null;
-    
+
     console.log('Processing ingredients image:', ingredientsImagePath);
     if (productPhotoPath) console.log('Product photo provided:', productPhotoPath);
     if (nutritionalContentImagePath) console.log('Nutrition image provided:', nutritionalContentImagePath);
-    
+
     // Analyze ingredients image using OCR + Gemini
     let ingredientAnalysis;
     try {
@@ -99,7 +99,7 @@ router.post('/analyze-ingredients', upload.fields([
       if (!ingredientAnalysis) {
         throw new Error('No analysis results received from analysis pipeline');
       }
-      
+
       // Log the analysis for debugging
       console.log('Analysis results:', {
         extractedText: ingredientAnalysis.extractedText,
@@ -108,12 +108,12 @@ router.post('/analyze-ingredients', upload.fields([
       });
     } catch (analysisError) {
       console.error('Analysis error:', analysisError);
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: 'Failed to analyze ingredients',
-        details: analysisError.message 
+        details: analysisError.message
       });
     }
-    
+
     // Create or update product
     let product;
     try {
@@ -123,9 +123,9 @@ router.post('/analyze-ingredients', upload.fields([
         if (!product) {
           return res.status(404).json({ error: 'Product not found' });
         }
-        
+
         product.ingredientsImagePath = ingredientsImagePath;
-        
+
         // Add product photo and nutrition image paths if they exist
         if (productPhotoPath) {
           product.productPhotoPath = productPhotoPath;
@@ -133,20 +133,20 @@ router.post('/analyze-ingredients', upload.fields([
           const sanitizedName = product.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
           product.formattedProductImageName = `${sanitizedName}_productimage`;
         }
-        
+
         if (nutritionalContentImagePath) {
           product.nutritionalContentImagePath = nutritionalContentImagePath;
           // Set formatted nutrients image name
           const sanitizedName = product.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
           product.formattedNutrientsImageName = `${sanitizedName}_nutrientsimage`;
         }
-        
+
         // Set formatted ingredients image name
         if (ingredientsImagePath) {
           const sanitizedName = product.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
           product.formattedIngredientsImageName = `${sanitizedName}_ingredientsimage`;
         }
-        
+
         product.ingredients = ingredientAnalysis.ingredients || [];
         product.ingredientAnalysis = {
           extractedText: ingredientAnalysis.extractedText || '',
@@ -157,7 +157,7 @@ router.post('/analyze-ingredients', upload.fields([
           overallSafety: ingredientAnalysis.overallSafety || '',
           detailedAnalysis: ingredientAnalysis.detailedAnalysis || ''
         };
-        
+
         // Update analysis fields with data from ingredient analysis
         product.analysis = {
           nutritionScore: ingredientAnalysis.nutritionScore || 50,
@@ -168,22 +168,22 @@ router.post('/analyze-ingredients', upload.fields([
           processingLevel: ingredientAnalysis.processingLevel || "processed",
           overallRecommendation: "Based on ingredients analysis"
         };
-        
+
         await product.save();
       } else {
         // Create new product without barcode
         // Generate a unique identifier since we don't have a barcode
         const uniqueId = new mongoose.Types.ObjectId().toString();
-        
+
         console.log('Creating new product with ingredients analysis');
         const productName = name || 'Unknown Product';
         const sanitizedName = productName.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        
+
         // Create formatted image names
         const formattedProductImageName = productPhotoPath ? `${sanitizedName}_productimage` : null;
         const formattedIngredientsImageName = ingredientsImagePath ? `${sanitizedName}_ingredientsimage` : null;
         const formattedNutrientsImageName = nutritionalContentImagePath ? `${sanitizedName}_nutrientsimage` : null;
-        
+
         product = new Product({
           name: productName,
           // Add a unique string in the barcode field to avoid null value
@@ -215,20 +215,20 @@ router.post('/analyze-ingredients', upload.fields([
           },
           productData: { product_name: name || 'Unknown Product' }
         });
-        
+
         await product.save();
         console.log('Product saved with ID:', product._id);
       }
     } catch (dbError) {
       console.error('Database error:', dbError);
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: 'Failed to save product data',
-        details: dbError.message 
+        details: dbError.message
       });
     }
 
     console.log('Successfully analyzed and saved product ingredients');
-    
+
     // Send back the complete product object
     res.json({
       status: 'success',
@@ -249,9 +249,9 @@ router.post('/analyze-ingredients', upload.fields([
     });
   } catch (error) {
     console.error('Error in analyze-ingredients endpoint:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to process ingredients analysis request',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -263,43 +263,43 @@ router.post('/analyze-manual-ingredients', upload.fields([
 ]), async (req, res) => {
   try {
     const { ingredients, name } = req.body;
-    
+
     if (!ingredients) {
       return res.status(400).json({ error: 'No ingredients provided' });
     }
-    
+
     const productPhotoPath = req.files && req.files.productPhoto ? req.files.productPhoto[0].path : null;
     const nutritionalContentImagePath = req.files && req.files.nutritionalContentImage ? req.files.nutritionalContentImage[0].path : null;
-    
+
     console.log('Processing manually entered ingredients:', ingredients);
     if (productPhotoPath) console.log('Product photo provided:', productPhotoPath);
     if (nutritionalContentImagePath) console.log('Nutrition image provided:', nutritionalContentImagePath);
-    
+
     // Analyze ingredients using Gemini
     let ingredientAnalysis;
     try {
       // Pass the ingredients to the Gemini service
       ingredientAnalysis = await analyzeManualIngredients(ingredients);
-      
+
       if (!ingredientAnalysis) {
         throw new Error('No analysis results received from Gemini API');
       }
-      
+
       console.log('Successfully analyzed ingredients with Gemini');
     } catch (analysisError) {
       console.error('Gemini API error:', analysisError);
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: 'Failed to analyze ingredients',
-        details: analysisError.message 
+        details: analysisError.message
       });
     }
-    
+
     // Create product
     let product;
     try {
       // Generate a unique identifier
       const uniqueId = new mongoose.Types.ObjectId().toString();
-      
+
       product = new Product({
         name: name || 'Unknown Product',
         barcode: `manual_${uniqueId}`,
@@ -327,17 +327,17 @@ router.post('/analyze-manual-ingredients', upload.fields([
         },
         productData: { product_name: name || 'Unknown Product' }
       });
-      
+
       await product.save();
       console.log('Product created from manual ingredients with ID:', product._id);
     } catch (dbError) {
       console.error('Database error:', dbError);
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: 'Failed to save product data',
-        details: dbError.message 
+        details: dbError.message
       });
     }
-    
+
     // Send back the product
     res.json({
       status: 'success',
@@ -354,9 +354,9 @@ router.post('/analyze-manual-ingredients', upload.fields([
     });
   } catch (error) {
     console.error('Error in analyze-manual-ingredients endpoint:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to process manual ingredients analysis',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -367,28 +367,28 @@ router.post('/analyze-product', upload.single('productImage'), async (req, res) 
     if (!req.file) {
       return res.status(400).json({ error: 'No product image uploaded' });
     }
-    
+
     const { barcode } = req.body;
     if (!barcode) {
       return res.status(400).json({ error: 'Barcode is required' });
     }
 
     console.log(`Analyzing product with barcode: ${barcode}`);
-    
+
     // Fetch product data from external API
     const productData = await fetchProductByBarcode(barcode);
     if (!productData) {
       console.error(`Product with barcode ${barcode} not found in external API`);
       return res.status(404).json({ error: 'Product not found' });
     }
-    
+
     console.log(`Product data retrieved for ${productData.product?.product_name || 'Unknown Product'}`);
 
     // Analyze product image using Gemini
     console.log(`Starting analysis for product image at path: ${req.file.path}`);
     const analysis = await analyzeProductImage(req.file.path, productData);
     console.log('Raw product analysis result from Gemini:', JSON.stringify(analysis, null, 2));
-    
+
     if (!analysis) {
       console.error('No analysis results received from geminiService');
       return res.status(500).json({ error: 'Failed to generate product analysis' });
@@ -405,23 +405,22 @@ router.post('/analyze-product', upload.single('productImage'), async (req, res) 
       overallRecommendation: analysis.overallRecommendation || 'No specific recommendation available'
     };
 
-    console.log('Formatted product analysis:', JSON.stringify(productAnalysis, null, 2));
-    
-    // Log conversion to see what might be happening with the values
-    console.log('Numeric conversion check:', {
-      rawNutritionScore: analysis.nutritionScore,
-      rawType: typeof analysis.nutritionScore,
-      parsedNutritionScore: parseFloat(analysis.nutritionScore || 50),
-      parsedType: typeof parseFloat(analysis.nutritionScore || 50),
-      rawSustainabilityScore: analysis.sustainabilityScore,
-      rawSustainabilityType: typeof analysis.sustainabilityScore,
-      parsedSustainabilityScore: parseFloat(analysis.sustainabilityScore || 50),
-      parsedSustainabilityType: typeof parseFloat(analysis.sustainabilityScore || 50)
-    });
+    // Extract ingredients from product data and analyze them
+    let ingredientAnalysis = null;
+    if (productData.product?.ingredients_text) {
+      try {
+        console.log('Analyzing ingredients from product data...');
+        ingredientAnalysis = await analyzeManualIngredients(productData.product.ingredients_text);
+        console.log('Ingredients analysis completed:', ingredientAnalysis);
+      } catch (ingredientError) {
+        console.error('Error analyzing ingredients:', ingredientError);
+        // Continue without ingredient analysis if it fails
+      }
+    }
 
     // Save product in database
     let product = await Product.findOne({ barcode });
-    
+
     if (product) {
       // Update existing product
       console.log(`Updating existing product with ID: ${product._id}`);
@@ -429,8 +428,23 @@ router.post('/analyze-product', upload.single('productImage'), async (req, res) 
       product.imagePath = req.file.path;
       product.productData = productData;
       product.analysis = productAnalysis;
+
+      // Update ingredient analysis if available
+      if (ingredientAnalysis) {
+        product.ingredients = ingredientAnalysis.ingredients || [];
+        product.ingredientAnalysis = {
+          extractedText: ingredientAnalysis.extractedText || '',
+          safetyScore: ingredientAnalysis.safetyScore,
+          harmfulIngredients: ingredientAnalysis.harmfulIngredients || [],
+          safeIngredients: ingredientAnalysis.safeIngredients || [],
+          unknownIngredients: ingredientAnalysis.unknownIngredients || [],
+          overallSafety: ingredientAnalysis.overallSafety || '',
+          detailedAnalysis: ingredientAnalysis.detailedAnalysis || ''
+        };
+      }
+
       product.updatedAt = new Date();
-      
+
       try {
         await product.save();
         console.log(`Product updated successfully with analysis data`);
@@ -447,9 +461,22 @@ router.post('/analyze-product', upload.single('productImage'), async (req, res) 
           name: productData.product?.product_name || 'Unknown Product',
           imagePath: req.file.path,
           productData,
-          analysis: productAnalysis
+          analysis: productAnalysis,
+          // Add ingredient analysis if available
+          ...(ingredientAnalysis && {
+            ingredients: ingredientAnalysis.ingredients || [],
+            ingredientAnalysis: {
+              extractedText: ingredientAnalysis.extractedText || '',
+              safetyScore: ingredientAnalysis.safetyScore,
+              harmfulIngredients: ingredientAnalysis.harmfulIngredients || [],
+              safeIngredients: ingredientAnalysis.safeIngredients || [],
+              unknownIngredients: ingredientAnalysis.unknownIngredients || [],
+              overallSafety: ingredientAnalysis.overallSafety || '',
+              detailedAnalysis: ingredientAnalysis.detailedAnalysis || ''
+            }
+          })
         });
-        
+
         await product.save();
         console.log(`New product created with ID: ${product._id}`);
       } catch (createError) {
@@ -464,6 +491,7 @@ router.post('/analyze-product', upload.single('productImage'), async (req, res) 
         id: product._id,
         name: product.name,
         hasAnalysis: !!product.analysis,
+        hasIngredientAnalysis: !!product.ingredientAnalysis,
         nutritionScore: product.analysis?.nutritionScore,
         sustainabilityScore: product.analysis?.sustainabilityScore,
         processingLevel: product.analysis?.processingLevel
@@ -477,7 +505,9 @@ router.post('/analyze-product', upload.single('productImage'), async (req, res) 
         barcode: product.barcode,
         name: product.name,
         imagePath: product.imagePath,
-        analysis: product.analysis
+        analysis: product.analysis,
+        ingredients: product.ingredients,
+        ingredientAnalysis: product.ingredientAnalysis
       }
     });
   } catch (error) {
@@ -502,40 +532,40 @@ router.get('/:id', async (req, res) => {
   try {
     console.log(`Fetching product with ID: ${req.params.id}`);
     const product = await Product.findById(req.params.id);
-    
+
     if (!product) {
       console.log(`Product with ID ${req.params.id} not found`);
       return res.status(404).json({ error: 'Product not found' });
     }
-    
+
     // Check and regenerate formatted image names if missing
     let needsUpdate = false;
-    
+
     if (product.name) {
       const sanitizedName = product.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      
+
       if (product.productPhotoPath && !product.formattedProductImageName) {
         product.formattedProductImageName = `${sanitizedName}_productimage`;
         needsUpdate = true;
       }
-      
+
       if (product.ingredientsImagePath && !product.formattedIngredientsImageName) {
         product.formattedIngredientsImageName = `${sanitizedName}_ingredientsimage`;
         needsUpdate = true;
       }
-      
+
       if (product.nutritionalContentImagePath && !product.formattedNutrientsImageName) {
         product.formattedNutrientsImageName = `${sanitizedName}_nutrientsimage`;
         needsUpdate = true;
       }
     }
-    
+
     // Save the product if any formatted image names were updated
     if (needsUpdate) {
       await product.save();
       console.log(`Updated formatted image names for product ${product._id}`);
     }
-    
+
     // Add detailed logging about the analysis data
     console.log('Product found, analysis data:', {
       hasAnalysis: !!product.analysis,
@@ -544,7 +574,7 @@ router.get('/:id', async (req, res) => {
       sustainabilityScore: product.analysis?.sustainabilityScore,
       processingLevel: product.analysis?.processingLevel
     });
-    
+
     res.json(product);
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -570,15 +600,15 @@ router.get('/barcode/:barcode', async (req, res) => {
 router.post('/fix-product-analysis/:id', async (req, res) => {
   try {
     const productId = req.params.id;
-    
+
     console.log(`Fixing product analysis for product with ID: ${productId}`);
-    
+
     // Find the product
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
-    
+
     // Check if analysis exists, create it if not
     if (!product.analysis) {
       console.log('Product has no analysis object, creating one with default values');
@@ -599,39 +629,39 @@ router.post('/fix-product-analysis/:id', async (req, res) => {
       } else {
         product.analysis.nutritionScore = parseFloat(product.analysis.nutritionScore) || 50;
       }
-      
+
       if (!product.analysis.nutritionEvaluation) {
         product.analysis.nutritionEvaluation = "No detailed nutrition analysis available";
       }
-      
+
       if (!Array.isArray(product.analysis.allergens)) {
         product.analysis.allergens = [];
       }
-      
+
       if (!Array.isArray(product.analysis.additives)) {
         product.analysis.additives = [];
       }
-      
+
       if (product.analysis.sustainabilityScore === undefined || product.analysis.sustainabilityScore === null) {
         product.analysis.sustainabilityScore = 50;
       } else {
         product.analysis.sustainabilityScore = parseFloat(product.analysis.sustainabilityScore) || 50;
       }
-      
+
       if (!product.analysis.processingLevel) {
         product.analysis.processingLevel = "processed";
       }
-      
+
       if (!product.analysis.overallRecommendation) {
         product.analysis.overallRecommendation = "No specific recommendation available";
       }
     }
-    
+
     // Save the updated product
     await product.save();
-    
+
     console.log('Product analysis fixed successfully');
-    
+
     res.json({
       status: 'success',
       message: 'Product analysis fixed successfully',
@@ -651,17 +681,17 @@ router.post('/fix-product-analysis/:id', async (req, res) => {
 router.post('/fix-all-products-analysis', async (req, res) => {
   try {
     console.log('Starting to fix all products with missing or incorrect analysis data');
-    
+
     // Find all products
     const products = await Product.find();
     console.log(`Found ${products.length} products to check`);
-    
+
     let fixedCount = 0;
-    
+
     // Process each product
     for (const product of products) {
       let needsFix = false;
-      
+
       // Check if analysis exists, create it if not
       if (!product.analysis) {
         console.log(`Product ${product._id} has no analysis object, creating one with default values`);
@@ -684,22 +714,22 @@ router.post('/fix-all-products-analysis', async (req, res) => {
           product.analysis.nutritionScore = 50;
           needsFix = true;
         }
-        
+
         if (!product.analysis.nutritionEvaluation) {
           product.analysis.nutritionEvaluation = "No detailed nutrition analysis available";
           needsFix = true;
         }
-        
+
         if (!Array.isArray(product.analysis.allergens)) {
           product.analysis.allergens = [];
           needsFix = true;
         }
-        
+
         if (!Array.isArray(product.analysis.additives)) {
           product.analysis.additives = [];
           needsFix = true;
         }
-        
+
         if (product.analysis.sustainabilityScore === undefined || product.analysis.sustainabilityScore === null) {
           product.analysis.sustainabilityScore = 50;
           needsFix = true;
@@ -707,18 +737,18 @@ router.post('/fix-all-products-analysis', async (req, res) => {
           product.analysis.sustainabilityScore = 50;
           needsFix = true;
         }
-        
+
         if (!product.analysis.processingLevel) {
           product.analysis.processingLevel = "processed";
           needsFix = true;
         }
-        
+
         if (!product.analysis.overallRecommendation) {
           product.analysis.overallRecommendation = "No specific recommendation available";
           needsFix = true;
         }
       }
-      
+
       // Save the product if any fixes were applied
       if (needsFix) {
         await product.save();
@@ -726,9 +756,9 @@ router.post('/fix-all-products-analysis', async (req, res) => {
         console.log(`Fixed product ${product._id}`);
       }
     }
-    
+
     console.log(`Fixed ${fixedCount} products with missing or incorrect analysis data`);
-    
+
     res.json({
       status: 'success',
       message: `Fixed ${fixedCount} products with missing or incorrect analysis data`,
@@ -744,11 +774,11 @@ router.post('/fix-all-products-analysis', async (req, res) => {
 router.get('/images/:formattedName', async (req, res) => {
   try {
     const { formattedName } = req.params;
-    
+
     if (!formattedName) {
       return res.status(400).json({ error: 'Formatted image name is required' });
     }
-    
+
     // Determine image type from the formatted name
     let imageType = 'productimage';
     if (formattedName.includes('_ingredientsimage')) {
@@ -756,7 +786,7 @@ router.get('/images/:formattedName', async (req, res) => {
     } else if (formattedName.includes('_nutrientsimage')) {
       imageType = 'nutrientsimage';
     }
-    
+
     // Find the product with the corresponding formatted image name
     let query = {};
     if (imageType === 'productimage') {
@@ -766,13 +796,13 @@ router.get('/images/:formattedName', async (req, res) => {
     } else if (imageType === 'nutrientsimage') {
       query.formattedNutrientsImageName = formattedName;
     }
-    
+
     const product = await Product.findOne(query);
-    
+
     if (!product) {
       return res.status(404).json({ error: 'Product with the specified image name not found' });
     }
-    
+
     // Get the correct image path based on the image type
     let imagePath;
     if (imageType === 'productimage') {
@@ -782,17 +812,17 @@ router.get('/images/:formattedName', async (req, res) => {
     } else if (imageType === 'nutrientsimage') {
       imagePath = product.nutritionalContentImagePath;
     }
-    
+
     if (!imagePath) {
       return res.status(404).json({ error: 'Image path not found for this product' });
     }
-    
+
     // Send the file path
     const absolutePath = path.resolve(__dirname, '..', imagePath);
     if (!fs.existsSync(absolutePath)) {
       return res.status(404).json({ error: 'Image file not found' });
     }
-    
+
     res.sendFile(absolutePath);
   } catch (error) {
     console.error('Error fetching image by formatted name:', error);
