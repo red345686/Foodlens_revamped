@@ -8,8 +8,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Helper function to get the correct image URL
 const getImageUrl = (product, imageType = 'product') => {
-  if (!product) return null;
-
+  if (product?.image) {
+    return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,h_500,w_500,f_auto/${product.image}`;
+  }
   // Check if using mock data (which has 'image' property)
   if (product.image) {
     return product.image;

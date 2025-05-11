@@ -82,9 +82,10 @@ const Blogs = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {blogs.slice(2, current).map((item, index) => (
               <Link to={item.url} key={`more-${index}`} className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                // Replace direct image URL usage with:
                 <img
-                  className="w-full h-48 object-cover rounded-t-lg"
-                  src={item.urlToImage}
+                  className="w-full sm:w-64 h-48 sm:h-auto object-cover rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
+                  src={`https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,h_500,w_500,f_auto/${item.urlToImage}`}
                   alt={item.title || 'Article image'}
                 />
                 <div className="p-6">

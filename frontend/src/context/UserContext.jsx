@@ -1,12 +1,13 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { userAPI } from '../services/api';
 import { useAuth } from '../AuthContext'; // Import the main AuthContext
+import { io } from 'socket.io-client';
 
 // Create context
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  const { user: firebaseUser } = useAuth(); // Get Firebase auth state
+  const { user: firebaseUser, logout: firebaseLogout } = useAuth(); // Get Firebase auth state
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -134,7 +135,25 @@ export const UserProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('currentUser');
     setCurrentUser(null);
+    firebaseLogout(); // Coordinate with AuthContext logout
   };
+
+  // Add WebSocket connection for real-time updates
+  useEffect(() => {
+    if (currentUser) {
+      // Change from process.env to Vite's environment variables
+      const socket = io(import.meta.env.VITE_API_URL);
+      
+      socket.on('profile_update', (updatedUser) => {
+        if (updatedUser._id === currentUser._id) {
+          setCurrentUser(updatedUser);
+          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        }
+      });
+
+      return () => socket.disconnect();
+    }
+  }, [currentUser]);
 
   // Update profile
   const updateProfile = async (userId, userData) => {

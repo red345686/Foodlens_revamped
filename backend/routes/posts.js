@@ -283,7 +283,7 @@ router.get('/:id', async (req, res) => {
     if (!post.user) {
       post.user = {
         username: 'Deleted User',
-        profilePicture: 'https://via.placeholder.com/150'
+        profilePicture: 'src/assets/default-avatar.png'
       };
     }
 

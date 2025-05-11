@@ -74,10 +74,10 @@ const MobileNav = memo(({ location, handleProfileClick }) => (
 
 // Separate protected route component with optimized rendering
 const ProtectedRoute = memo(({ children }) => {
-  const { currentUser } = useContext(UserContext);
+  const { user } = useAuth(); // From main app's AuthContext
   const location = useLocation();
 
-  if (!currentUser && !location.pathname.includes('/login') && !location.pathname.includes('/register')) {
+  if (!user && !location.pathname.includes('/login') && !location.pathname.includes('/register')) {
     return <Navigate to="/community/login" replace />;
   }
 
@@ -144,16 +144,18 @@ const Community = () => {
 
         {/* Navigation tabs - Only show if authenticated */}
         <UserContext.Consumer>
-          {({ currentUser }) =>
-            currentUser && (
+          {(contextValue) => {
+            if (!contextValue) return null; // Guard against undefined context
+            const { currentUser } = contextValue;
+            return currentUser && (
               <>
                 <div className="hidden md:flex justify-center mt-2">
                   <TabLinks location={location} handleProfileClick={handleProfileClick} />
                 </div>
                 <MobileNav location={location} handleProfileClick={handleProfileClick} />
               </>
-            )
-          }
+            );
+          }}
         </UserContext.Consumer>
 
         {/* Main content with fixed height container */}

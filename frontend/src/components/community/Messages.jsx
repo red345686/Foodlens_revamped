@@ -18,6 +18,9 @@ import {
 } from 'react-icons/fa';
 import MessageSettings from './MessageSettings';
 
+// Add at the top of the file
+import { useWebSocket } from '../../context/WebSocketContext';
+
 const Messages = () => {
   const { currentUser } = useContext(UserContext);
   const [conversations, setConversations] = useState([]);
@@ -30,6 +33,7 @@ const Messages = () => {
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [newMessageRecipients, setNewMessageRecipients] = useState([]);
   const [newMessageSearch, setNewMessageSearch] = useState('');
+  const [searchResults, setSearchResults] = useState([]); // Add this line
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -117,6 +121,30 @@ const Messages = () => {
     } catch (err) {
       console.error('Error fetching following users:', err);
     }
+  };
+
+  // Add this new function to search for users
+  const searchUsers = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    try {
+      // You'll need to implement this endpoint in your backend
+      const response = await userAPI.searchUsers(query);
+      setSearchResults(response.data);
+    } catch (err) {
+      console.error('Error searching users:', err);
+      setSearchResults([]);
+    }
+  };
+
+  // Update the handler for search input
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setNewMessageSearch(query);
+    searchUsers(query);
   };
 
   const fetchMessages = async (otherUserId) => {
@@ -265,14 +293,20 @@ const Messages = () => {
     messageInputRef.current?.focus();
   };
 
+  // Inside the Messages component, before the return statement
   const filteredConversations = conversations.filter(conversation => 
-    conversation.user.username.toLowerCase().includes(searchTerm.toLowerCase())
+  conversation.user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const filteredRecipients = newMessageRecipients.filter(user => 
-    user.username.toLowerCase().includes(newMessageSearch.toLowerCase())
-  );
-
+  
+  // Add this inside the component
+  // Inside the Messages component, before the return statement
+  // Add this inside the component
+  const filteredRecipients = newMessageSearch.trim() === '' 
+    ? newMessageRecipients 
+    : searchResults.length > 0 
+      ? searchResults 
+      : [];
+  
   // Format date for messages
   const formatMessageDate = (dateString) => {
     const messageDate = new Date(dateString);
@@ -613,9 +647,9 @@ const Messages = () => {
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search for people you follow..."
+                  placeholder="Search for users..."
                   value={newMessageSearch}
-                  onChange={(e) => setNewMessageSearch(e.target.value)}
+                  onChange={handleSearchChange}
                   className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#294c25]"
                 />
               </div>
@@ -623,8 +657,17 @@ const Messages = () => {
               <div className="max-h-80 overflow-y-auto">
                 {filteredRecipients.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    <p>No users found</p>
-                    <p className="text-sm mt-1">Follow someone to start a conversation</p>
+                    {newMessageSearch.trim() !== '' ? (
+                      <>
+                        <p>No users found matching "{newMessageSearch}"</p>
+                        <p className="text-sm mt-1">Try a different search term</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>No users found</p>
+                        <p className="text-sm mt-1">Follow someone to start a conversation</p>
+                      </>
+                    )}
                   </div>
                 ) : (
                   filteredRecipients.map(user => (
@@ -661,4 +704,4 @@ const Messages = () => {
   );
 };
 
-export default Messages; 
+export default Messages;

@@ -308,7 +308,7 @@ const Feed = () => {
         user: {
           _id: currentUser._id,
           username: currentUser.username || currentUser.displayName || 'User',
-          profilePicture: currentUser.profilePicture || currentUser.photoURL || 'https://via.placeholder.com/150'
+          profilePicture: currentUser.profilePicture || currentUser.photoURL || '/src/assets/defaultavatar.png'
         },
         createdAt: new Date().toISOString()
       };
@@ -392,4 +392,4 @@ const Feed = () => {
   );
 };
 
-export default Feed; 
+export default Feed;
