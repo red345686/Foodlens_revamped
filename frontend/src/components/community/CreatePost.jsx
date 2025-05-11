@@ -4,7 +4,7 @@ import { postAPI } from '../../services/api';
 import { FaImage, FaMapMarkerAlt, FaTimes } from 'react-icons/fa';
 
 // Default avatar to use if user has no profile picture
-const DEFAULT_AVATAR = '/default-profile.png';
+const DEFAULT_AVATAR = 'src/assets/defaultavatar.png';
 
 // Create a completely isolated form component that won't re-render when parent changes
 const PostForm = memo(({ currentUser, onSubmit, onCancel }) => {

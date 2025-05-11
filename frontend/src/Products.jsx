@@ -505,6 +505,22 @@ const Products = () => {
     }
   };
 
+  const handleBarcodeSearch = async (e) => {
+    e.preventDefault();
+    if (!barcode) return;
+    setProcessingStatus('Searching for product...');
+    try {
+      const response = await axios.get(`${API_URL}/api/products/barcode/${barcode}`);
+      if (response.data && response.data._id) {
+        window.location.href = `/product/${response.data._id}`;
+      } else {
+        setProcessingStatus('No product found for this barcode.');
+      }
+    } catch (error) {
+      setProcessingStatus('Error searching for product.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200 pt-20">
       <NavBar page="products" />
@@ -539,6 +555,7 @@ const Products = () => {
           </button>
         </div>
 
+
         {/* Products Grid */}
         {loading ? (
           <div className="flex justify-center py-10">
@@ -563,6 +580,51 @@ const Products = () => {
                       e.target.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80';
                     }}
                   />
+
+
+                  {/* Health Score Badge */}
+                  {product.analysis?.nutritionScore && (
+                    <div className="absolute top-2 right-2 bg-white rounded-full h-12 w-12 flex items-center justify-center border-2 border-green-500 shadow-md">
+                      <span className="text-lg font-bold text-green-700">
+                        {Math.round(getAnalysisValue(product, 'nutritionScore', 0))}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{product.name}</h3>
+
+                  {product.analysis ? (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {product.analysis.nutritionGrade && (
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${product.analysis.nutritionGrade === 'A' ? 'bg-green-500 text-white' :
+                          product.analysis.nutritionGrade === 'B' ? 'bg-lime-500 text-white' :
+                            product.analysis.nutritionGrade === 'C' ? 'bg-yellow-500 text-white' :
+                              product.analysis.nutritionGrade === 'D' ? 'bg-orange-500 text-white' :
+                                'bg-red-500 text-white'
+                          }`}>
+                          {product.analysis.nutritionGrade || '?'}
+                        </span>
+                      )}
+
+                      {product.analysis.processingLevel && (
+                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${product.analysis.processingLevel === 'Unprocessed' ? 'bg-green-100 text-green-800' :
+                          product.analysis.processingLevel === 'Minimally processed' ? 'bg-green-200 text-green-800' :
+                            product.analysis.processingLevel === 'Processed' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                          }`}>
+                          {product.analysis.processingLevel}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-500">
+                        No analysis
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="p-4">
                   <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2">{product.name}</h3>

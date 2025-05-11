@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { FaHeart, FaRegHeart, FaComment, FaEllipsisV, FaTrash } from 'react-icons/fa';
 
 // Default avatar URL to use if profilePicture is missing
-const DEFAULT_AVATAR = 'https://via.placeholder.com/150';
+const DEFAULT_AVATAR = '/src/assets/defaultavatar.png';
 
 // Create a custom comparison function for the memo HOC
 // This prevents unnecessary re-renders by doing a deep equality check on post data
@@ -156,7 +156,7 @@ const Post = memo(({ post, currentUser, onLike, onComment, onDelete }) => {
         <div className="relative">
           {console.log('Rendering image with src:', post.images[0])}
           <img 
-            src={post.images[0]} 
+            src={post.images[0] } 
             alt="Post" 
             className="w-full object-cover max-h-96"
             onError={(e) => {
@@ -283,4 +283,4 @@ const Post = memo(({ post, currentUser, onLike, onComment, onDelete }) => {
 // Add display name for debugging in React DevTools
 Post.displayName = 'Post';
 
-export default Post; 
+export default Post;

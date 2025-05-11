@@ -10,14 +10,19 @@ import userRoutes from './routes/users.js';
 import postRoutes from './routes/posts.js';
 import messageRoutes from './routes/messages.js';
 import productRoutes from './routes/products.js';
-import extractBarcodeFromImage from './barcode.js'; // Your Gemini OCR logic
+import chatBotRoute from './routes/chatbot.js';
+import extractBarcodeFromImage from './barcode.js';
 import { fetchProductByBarcode, fetchProductsByCategory, searchProductsByName } from './foodapi.js';
 import admin from 'firebase-admin';
-import { initializeDefaultBadges } from './badgeService.js'; // Import badge service
+import { initializeDefaultBadges } from './badgeService.js';
 import { analyzeManualIngredients } from './geminiService.js';
+// Import HTTP and Socket.IO
+import http from 'http';
+import { Server } from 'socket.io';
 
 dotenv.config();
 
+const PORT = process.env.PORT || 5000;
 // Initialize Firebase Admin SDK
 // For development, you may need to use a service account JSON file
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -35,6 +40,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+// Create HTTP server using Express app
+const server = http.createServer(app);
+
+// Initialize Socket.IO with CORS configuration
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173', // Frontend URL
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
 const upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
@@ -57,7 +73,14 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Replace this line
 app.use(cors());
+
+// With this configuration
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173', // Frontend URL
+  credentials: true
+}));
 app.use(express.json());
 
 // Logging middleware for file access
@@ -89,7 +112,56 @@ app.use('/api/posts', postRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/products', productRoutes);
 
-const PORT = process.env.PORT || 5000;
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+  
+  // Join a room for user-specific updates
+  socket.on('join', (userId) => {
+    if (userId) {
+      socket.join(`user:${userId}`);
+      console.log(`User ${userId} joined their personal room`);
+    }
+    // Join the global feed room for all users
+    socket.join('feed');
+  });
+  
+  // Handle post creation
+  socket.on('new_post', (post) => {
+    // Broadcast to all users in the feed room
+    io.to('feed').emit('post_created', post);
+  });
+  
+  // Handle post likes
+  socket.on('like_post', ({ postId, userId }) => {
+    io.to('feed').emit('post_liked', { postId, userId });
+  });
+  
+  // Handle post comments
+  socket.on('comment_post', ({ postId, comment }) => {
+    io.to('feed').emit('post_commented', { postId, comment });
+  });
+  
+  // Handle private messages
+  socket.on('send_message', ({ senderId, recipientId, message }) => {
+    // Emit to sender and recipient rooms
+    io.to(`user:${senderId}`).to(`user:${recipientId}`).emit('new_message', {
+      senderId,
+      recipientId,
+      message
+    });
+  });
+  
+  // Handle typing indicators for messages
+  socket.on('typing', ({ senderId, recipientId }) => {
+    socket.to(`user:${recipientId}`).emit('user_typing', { senderId });
+  });
+  
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 app.get('/', (req, res) => {
   res.send('Hello, Backend is running!');
 });
@@ -115,6 +187,8 @@ app.post('/getbarcode', upload.single('file'), async (req, res) => {
     res.status(500).json({ status: "failed", error: 'Error extracting barcode' });
   }
 });
+
+app.use('/api/chatbot', chatBotRoute);
 
 const newsCache = {
   syncDate: null,
@@ -258,6 +332,12 @@ app.get('/product/byname/:prodName', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+// Remove this duplicate listen call
+// app.listen(PORT, () => {
+//   console.log(`🚀 Server running on http://localhost:${PORT}`);
+// });
+
+// Keep only the HTTP server listen
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });

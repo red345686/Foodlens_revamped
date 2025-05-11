@@ -64,7 +64,7 @@ const Blogs = () => {
               >
                 <div className="flex flex-col sm:flex-row">
                   <img
-                    className="w-full sm:w-64 h-48 sm:h-auto object-cover rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
+                    className="w-full sm:w-64 object-cover rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
                     src={item.urlToImage}
                     alt={item.title || 'Article image'}
                   />
@@ -81,9 +81,9 @@ const Blogs = () => {
           <h2 className="text-3xl md:text-4xl text-[#005b2f] font-serif mb-6">More →</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {blogs.slice(2, current).map((item, index) => (
-              <Link to={item.url} key={`more-${index}`} className="block bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+              <Link to={item.url} key={`more-${index}`} className="flex flex-col justify-between bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 <img
-                  className="w-full h-48 object-cover rounded-t-lg"
+                  className="h-auto sm:h-48 object-cover rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
                   src={item.urlToImage}
                   alt={item.title || 'Article image'}
                 />

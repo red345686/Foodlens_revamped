@@ -174,71 +174,66 @@ router.get('/unread/:userId', async (req, res) => {
 // Get list of conversations for a user
 router.get('/conversations/:userId', async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = decodeURIComponent(req.params.userId);
     
-    // Find all users that the current user has messaged or received messages from
-    const messages = await Message.find({
-      $or: [{ sender: userId }, { recipient: userId }]
-    }).sort({ createdAt: -1 });
-    
-    // Get unique user IDs from these messages (excluding current user)
-    const userIds = new Set();
-    messages.forEach(message => {
-      if (message.sender.toString() !== userId) {
-        userIds.add(message.sender.toString());
-      }
-      if (message.recipient.toString() !== userId) {
-        userIds.add(message.recipient.toString());
-      }
-    });
-    
-    // Get user details for these IDs
-    const conversationUsers = await User.find({
-      _id: { $in: [...userIds] }
-    }).select('username profilePicture');
-    
-    // For each user, find the latest message
-    const conversations = await Promise.all(
-      conversationUsers.map(async (user) => {
-        const latestMessage = await Message.findOne({
+    // Validate user ID format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID format' });
+    }
+
+    const conversations = await Message.aggregate([
+      {
+        $match: {
           $or: [
-            { sender: userId, recipient: user._id },
-            { sender: user._id, recipient: userId }
+            { sender: mongoose.Types.ObjectId(userId) },
+            { recipient: mongoose.Types.ObjectId(userId) }
           ]
-        }).sort({ createdAt: -1 });
-        
-        const unreadCount = await Message.countDocuments({
-          sender: user._id,
-          recipient: userId,
-          read: false
-        });
-        
-        return {
-          user: {
-            _id: user._id,
-            username: user.username,
-            profilePicture: user.profilePicture
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $eq: ["$sender", mongoose.Types.ObjectId(req.params.userId)] },
+              "$recipient",
+              "$sender"
+            ]
           },
-          latestMessage: latestMessage ? {
-            text: latestMessage.text,
-            createdAt: latestMessage.createdAt,
-            sender: latestMessage.sender
-          } : null,
-          unreadCount
-        };
-      })
-    );
-    
-    // Sort conversations by latest message
-    conversations.sort((a, b) => {
-      if (!a.latestMessage) return 1;
-      if (!b.latestMessage) return -1;
-      return new Date(b.latestMessage.createdAt) - new Date(a.latestMessage.createdAt);
-    });
-    
+          lastMessage: { $first: "$$ROOT" },
+          unreadCount: {
+            $sum: {
+              $cond: [
+                { $and: [
+                  { $eq: ["$recipient", mongoose.Types.ObjectId(req.params.userId)] },
+                  { $eq: ["$read", false] }
+                ]},
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "participant"
+        }
+      },
+      {
+        $unwind: "$participant"
+      }
+    ]);
+
     res.status(200).json(conversations);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error('Conversation Error:', err);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -364,4 +359,4 @@ router.get('/blocked/:userId', async (req, res) => {
   }
 });
 
-export default router; 
+export default router;

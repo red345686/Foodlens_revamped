@@ -19,6 +19,7 @@ import Profile from './Profile';
 import Contact from './Contact';
 import PageTransition from './components/PageTransition';
 import { AnimatePresence } from 'framer-motion';
+import { WebSocketProvider } from './context/WebSocketContext';
 
 // A wrapper component for pages to apply consistent transitions
 const TransitionWrapper = ({ children, page }) => {
@@ -54,7 +55,7 @@ function App() {
     },
     {
       path: "/explore",
-      element: <TransitionWrapper page='explore'><Explore /></TransitionWrapper>
+      element: <TransitionWrapper page='explore'><Products /></TransitionWrapper>
     },
     {
       path: "/login",
@@ -87,14 +88,20 @@ function App() {
     {
       path: "/contact",
       element: <TransitionWrapper page='contact'><Contact /></TransitionWrapper>
+    },
+    {
+      path: "/chatbot",
+      element: <TransitionWrapper page='chatbot'><Contact /></TransitionWrapper>
     }
   ]);
   
   return (
     <AuthProvider>
-      <AnimatePresence mode="wait">
-        <RouterProvider router={router} />
-      </AnimatePresence>
+      <WebSocketProvider>
+        <AnimatePresence mode="wait">
+          <RouterProvider router={router} />
+        </AnimatePresence>
+      </WebSocketProvider>
     </AuthProvider>
   );
 }

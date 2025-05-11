@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 // Define the API base URL with configurable port
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Create axios instance
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -29,6 +29,7 @@ export const userAPI = {
   updateProfile: (userId, userData) => api.put(`/users/${userId}`, userData),
   followUser: (userId, currentUserId) => api.post(`/users/${userId}/follow`, { userId: currentUserId }),
   unfollowUser: (userId, currentUserId) => api.post(`/users/${userId}/unfollow`, { userId: currentUserId }),
+  searchUsers: (query) => api.get(`/users/search?q=${encodeURIComponent(query)}`),
   // Badge endpoints
   getUserBadges: (userId) => api.get(`/users/${userId}/badges`),
   updateBadgeVisibility: (userId, badgeId, displayed) => 
@@ -57,7 +58,7 @@ export const userAPI = {
         return Promise.resolve({
           data: {
             ...firebaseUser,
-            profilePicture: firebaseUser.profilePicture || 'https://via.placeholder.com/150',
+            profilePicture: firebaseUser.profilePicture || '/src/assets/defaultavatar.png',
             following: firebaseUser.following || []
           }
         });
@@ -124,21 +125,32 @@ export const postAPI = {
   deletePost: (postId, userId) => api.delete(`/posts/${postId}`, { data: { userId } }),
 };
 
-// Message API
-export const messageAPI = {
-  sendMessage: (senderId, recipientId, text) => api.post('/messages', { senderId, recipientId, text }),
-  getConversation: (userId, otherUserId) => api.get(`/messages/${userId}/${otherUserId}`),
-  markAsRead: (senderId, recipientId) => api.put(`/messages/read/${senderId}/${recipientId}`),
-  getUnreadCount: (userId) => api.get(`/messages/unread/${userId}`),
-  getConversations: (userId) => api.get(`/messages/conversations/${userId}`),
-  updatePrivacySettings: (userId, settings) => api.put(`/messages/privacy/${userId}`, settings),
-  blockUser: (userId, blockedUserId) => api.post(`/messages/block/${userId}`, { blockedUserId }),
-  unblockUser: (userId, unblockedUserId) => api.post(`/messages/unblock/${userId}`, { unblockedUserId }),
-  getBlockedUsers: (userId) => api.get(`/messages/blocked/${userId}`),
-};
+// Create a specialized axios instance for messages
+const messageAxiosInstance = axios.create({
+  baseURL: `${API_URL}/api/messages`, // Make sure this includes /api prefix
+  withCredentials: true,
+  headers: {'Content-Type': 'application/json'}
+});
 
-export default {
-  user: userAPI,
-  post: postAPI,
-  message: messageAPI,
-}; 
+// Add interceptor to the message instance
+messageAxiosInstance.interceptors.request.use(config => {
+  if (config.url?.includes('/conversations/')) {
+    config.url = config.url.replace(/([^/]+)$/, match => 
+      encodeURIComponent(match)
+    );
+  }
+  return config;
+});
+
+// Message API using both base api and specialized instance
+export const messageAPI = {
+  sendMessage: (senderId, recipientId, text) => messageAxiosInstance.post('', { senderId, recipientId, text }),
+  getConversation: (userId, otherUserId) => messageAxiosInstance.get(`/${userId}/${otherUserId}`),
+  markAsRead: (senderId, recipientId) => messageAxiosInstance.put(`/read/${senderId}/${recipientId}`),
+  getUnreadCount: (userId) => messageAxiosInstance.get(`/unread/${userId}`),
+  getConversations: (userId) => messageAxiosInstance.get(`/conversations/${encodeURIComponent(userId)}`),
+  updatePrivacySettings: (userId, settings) => messageAxiosInstance.put(`/privacy/${userId}`, settings),
+  blockUser: (userId, blockedUserId) => messageAxiosInstance.post(`/block/${userId}`, { blockedUserId }),
+  unblockUser: (userId, unblockedUserId) => messageAxiosInstance.post(`/unblock/${userId}`, { unblockedUserId }),
+  getBlockedUsers: (userId) => messageAxiosInstance.get(`/blocked/${userId}`),
+};

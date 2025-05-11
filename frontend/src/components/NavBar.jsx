@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { motion, AnimatePresence } from 'framer-motion';
 import { buttonHover, buttonTap } from './animations';
-import logoImage from '../assets/logo.png';
+import logo from '../assets/logo.png';
 
 function NavBar({ page }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -172,14 +172,14 @@ function NavBar({ page }) {
       variants={headerVariants}
     >
       <nav className="container mx-auto px-4 sm:px-6 py-2">
-        <div className={`flex items-center ${page === 'home' ? 'justify-end' : 'justify-between'}`}>
+        <div className={`flex items-center justify-between`}>
           <motion.div variants={logoVariants}>
-            <Link to='/' className={`flex items-center ${page === 'home' ? 'absolute left-6' : ''}`}>
+            <Link to='/' className={`flex items-center`}>
               <motion.img
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-8 sm:w-10 rounded-lg"
-                src={logoImage}
+                src={logo}
                 alt="FoodLens Logo"
               />
               <motion.span
