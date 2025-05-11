@@ -29,7 +29,7 @@ const TabLinks = memo(({ location, handleProfileClick }) => (
         : 'text-gray-500 hover:text-[#294c25]'
         }`}
     >
-      Messages
+      Chat With AI  
     </Link>
   </div>
 ));
@@ -57,7 +57,7 @@ const MobileNav = memo(({ location, handleProfileClick }) => (
           }`}
       >
         <FaEnvelope size={24} />
-        <span className="text-xs mt-1">Messages</span>
+        <span className="text-xs mt-1">Chat With AI</span>
       </Link>
 
       <Link
@@ -107,7 +107,7 @@ const Community = () => {
 
   // Pre-defined header component with stable dimensions
   const Header = useMemo(() => (
-    <header className="bg-white shadow-sm pt-16" style={{ height: '110px' }}>
+    <header className="bg-white shadow-sm pt-10" style={{ height: '110px' }}>
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center">
