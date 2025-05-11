@@ -10,6 +10,7 @@ import userRoutes from './routes/users.js';
 import postRoutes from './routes/posts.js';
 import messageRoutes from './routes/messages.js';
 import productRoutes from './routes/products.js';
+import chatBotRoute from './routes/chatbot.js';
 import extractBarcodeFromImage from './barcode.js';
 import { fetchProductByBarcode, fetchProductsByCategory, searchProductsByName } from './foodapi.js';
 import admin from 'firebase-admin';
@@ -186,6 +187,8 @@ app.post('/getbarcode', upload.single('file'), async (req, res) => {
     res.status(500).json({ status: "failed", error: 'Error extracting barcode' });
   }
 });
+
+app.use('/api/chatbot', chatBotRoute);
 
 const newsCache = {
   syncDate: null,

@@ -88,6 +88,10 @@ function App() {
     {
       path: "/contact",
       element: <TransitionWrapper page='contact'><Contact /></TransitionWrapper>
+    },
+    {
+      path: "/chatbot",
+      element: <TransitionWrapper page='chatbot'><Contact /></TransitionWrapper>
     }
   ]);
   
